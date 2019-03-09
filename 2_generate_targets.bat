@@ -10,5 +10,4 @@ targen -v -d2 -G -g32 -f%PATCHCOUNT% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROF
 printtarg -v -iCM -h -R1 -T300 -p %PAPERSIZE% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILENAME%
 
 echo Step 2 Finished!
-echo Please print %PAPERSIZE% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILENAME%*.tif
-echo Run Next Step (3_chartread)
+echo Run Next Step (3_print_charts)

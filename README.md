@@ -25,3 +25,6 @@ Extract the ``ACPU.zip`` file content inside the project folder. So the
 And then just run the commands in order. Start with ``1_setup_vars`` and follow
 the instructions. And finally finish it by installing your ICC profile to your
 system.
+
+The system is setup to use 2 pages of A4 or 1 page of A3 size paper with 420
+and 460 color patches respectively.
