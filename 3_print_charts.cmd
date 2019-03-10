@@ -15,4 +15,4 @@ echo %cd%\Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILENAME%_02.tif | clip
 
 echo Step 3 Finished!
 echo Done printing profiles
-echo Run Next Step (4_chartread)
+echo Run Next Step (4_read_charts)
