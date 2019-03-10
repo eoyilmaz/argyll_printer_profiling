@@ -17,6 +17,7 @@ set PAPERMODEL=
 set PAPERFINISH=
 set PAPERSIZE=
 set INK_BRAND=
+set PRECONDITION_PROFILE_PATH=
 
 rem Request user values
 set /p PRINTERBRAND=Printer Brand? (%PRINTERBRAND_DEFAULT_VALUE%)
@@ -26,6 +27,8 @@ set /p PAPERMODEL=Paper Model? (%PAPERMODEL_DEFAULT_VALUE%)
 set /p PAPERFINISH=Paper Finish? (%PAPERFINISH_DEFAULT_VALUE%)
 set /p PAPERSIZE=Paper Size? (%PAPERSIZE_DEFAULT_VALUE%)
 set /p INK_BRAND=Ink Brand? (%INK_BRAND_DEFAULT_VALUE%)
+
+set /p PRECONDITION_PROFILE_PATH=Pre-conditioning Profile Path? ()
 
 rem use default values for empty vars
 if "%PINTERBRAND%"=="" set PRINTERBRAND=%PRINTERBRAND_DEFAULT_VALUE%
