@@ -10,7 +10,7 @@ IF "%PRECONDITION_PROFILE_PATH%" == "" (
 rem use ColorMunki Photo as the device
 rem printtarg -v -iCM -h -R1 -T300 -M6 -L -P -p %PAPERSIZE% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
 
-rem use i1 pro as the device
+rem use i1 pro as the device to print but later use ColorMunki Photo to read
 printtarg -v -ii1 -h -R1 -T300 -M2 -L -P -p %PAPERSIZE% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
 
 echo Step 2 Finished!
