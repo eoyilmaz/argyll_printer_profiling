@@ -47,6 +47,7 @@ set INK_BRAND=
 set PRECONDITION_PROFILE_PATH=
 set PATCH_COUNT=
 set USE_HIGH_DENSITY_MODE=
+set COPYRIGHT=
 
 rem Request user values
 set /p PRINTERBRAND=Printer Brand? (%PRINTERBRAND_DEFAULT_VALUE%)
@@ -89,6 +90,9 @@ if "%PAPERSIZE%"=="A3" set PER_PAGE_PATCH_COUNT_DEFAULT_VALUE=%PER_PAGE_PATCH_CO
 if "%PATCH_COUNT%"=="" set /a PATCH_COUNT=%NUMBER_OF_PAGES% * %PER_PAGE_PATCH_COUNT_DEFAULT_VALUE%
 
 set /p PRECONDITION_PROFILE_PATH=Pre-conditioning Profile Path? ()
+
+set /p COPYRIGHT=Copyright Info?
+
 
 rem get date time string
 for /f "tokens=1-3 delims=/. " %%a in ('date /t') do (set PROFILEDATE=%%c%%b%%a)
