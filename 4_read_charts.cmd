@@ -8,11 +8,11 @@ set /p READ_MODE=Read Mode? Strip (1) or Patch by Patch (2)? (Default: 1-Strip)
 if "%READ_MODE%"=="" set READ_MODE=%READ_MODE_DEFAULT_VALUE%
 
 if exist Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%.ti3 (
-    set /p CONTINUE_READING=Previous Chart exists! Continue Reading? (%CONTINUE_READING_DEFAULT_VALUE%)
+    set /p CONTINUE_READING=Previous Chart exists! Continue Reading? (%CONTINUE_READING_DEFAULT_VALUE%^)
 ) else (
     set CONTINUE_READING=N
 )
-
+if "%CONTINUE_READING%"=="" set CONTINUE_READING=%CONTINUE_READING_DEFAULT_VALUE%
 
 if "%READ_MODE%"=="1" (
     if "%CONTINUE_READING%"=="Y" (
