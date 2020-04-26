@@ -1,16 +1,72 @@
 @echo off
 
 rem Set default values
-set PrinterBrandDefaultValue=Canon
-set PrinterModelDefaultValue=iX6800_Series
-set PaperBrandDefaultValue=Kodak
-set PaperModelDefaultValue=UPPP
-set PaperFinishDefaultValue=Glossy
-set PaperSizeDefaultValue=A4
-set InkBrandDefaultValue=Canon
-set UseHighDensityModeDefaultValue=True
-set NumberOfPagesDefaultValue=1
-set PerPagePatchCountDefaultValue=
+if "%PrinterBrand%" == "" (
+    set PrinterBrandDefaultValue=Canon
+) else (
+    set PrinterBrandDefaultValue=%PrinterBrand%
+)
+
+if "%PrinterModel%" == "" (
+    set PrinterModelDefaultValue=iX6850
+) else (
+    set PrinterModelDefaultValue=%PrinterModel%
+)
+
+if "%PaperBrand%" == "" (
+    set PaperBrandDefaultValue=Kodak
+) else (
+    set PaperBrandDefaultValue=%PaperBrand%
+)
+
+if "%PaperModel%" == "" (
+    set PaperModelDefaultValue=UPPP
+) else (
+    set PaperModelDefaultValue=%PaperModel%
+)
+
+if "%PaperFinish%" == "" (
+    set PaperFinishDefaultValue=Glossy
+) else (
+    set PaperFinishDefaultValue=%PaperFinish%
+)
+
+if "%PaperSize%" == "" (
+    set PaperSizeDefaultValue=A4
+) else (
+    set PaperSizeDefaultValue=%PaperSize%
+)
+
+if "%InkBrand%" == "" (
+    set InkBrandDefaultValue=Canon
+) else (
+    set InkBrandDefaultValue=%InkBrand%
+)
+
+if "%UseHighDensityMode%" == "" (
+    set UseHighDensityModeDefaultValue=True
+) else (
+    set UseHighDensityModeDefaultValue=%UseHighDensityMode%
+)
+
+if "%NumberOfPages%" == "" (
+    set NumberOfPagesDefaultValue=1
+) else (
+    set NumberOfPagesDefaultValue=%NumberOfPages%
+)
+
+if "%PerPagePatchCount%" == "" (
+    set PerPagePatchCountDefaultValue=
+) else (
+    set PerPagePatchCountDefaultValue=%PerPagePatchCount%
+)
+
+if "%Copyright%" == "" (
+    set CopyrightDefaultValue=
+) else (
+    set CopyrightDefaultValue=%Copyright%
+)
+
 
 rem =================================================
 rem If the UseHighDensityModeDefaultValue is set
@@ -52,7 +108,7 @@ set Copyright=
 
 rem Request user values
 set /p PrinterBrand=Printer Brand? (%PrinterBrandDefaultValue%)
-if "%PINTERBRAND%"=="" set PrinterBrand=%PrinterBrandDefaultValue%
+if "%PrinterBrand%"=="" set PrinterBrand=%PrinterBrandDefaultValue%
 
 set /p PrinterModel=Printer Model? (%PrinterModelDefaultValue%)
 if "%PrinterModel%"=="" set PrinterModel=%PrinterModelDefaultValue%
@@ -92,7 +148,8 @@ if "%PatchCount%"=="" set /a PatchCount=%NumberOfPages% * %PerPagePatchCountDefa
 
 set /p PreconditionProfilePath=Pre-conditioning Profile Path? ()
 
-set /p Copyright=Copyright Info?
+set /p Copyright=Copyright Info? (%CopyrightDefaultValue%)
+if "%Copyright%"=="" set Copyright=%CopyrightDefaultValue%
 
 
 rem get date time string
