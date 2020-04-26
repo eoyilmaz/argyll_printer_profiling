@@ -1,30 +1,30 @@
 @echo off
-set READ_MODE_DEFAULT_VALUE=1
-set READ_MODE=
-set CONTINUE_READING_DEFAULT_VALUE=Y
-set CONTINUE_READING=
+set ReadModeDefaultValue=1
+set ReadMode=
+set ContinueReadingDefaultValue=Y
+set ContinueReading=
 
-set /p READ_MODE=Read Mode? Strip (1) or Patch by Patch (2)? (Default: 1-Strip)
-if "%READ_MODE%"=="" set READ_MODE=%READ_MODE_DEFAULT_VALUE%
+set /p ReadMode=Read Mode? Strip (1) or Patch by Patch (2)? (Default: 1-Strip)
+if "%ReadMode%"=="" set ReadMode=%ReadModeDefaultValue%
 
-if exist Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%.ti3 (
-    set /p CONTINUE_READING=Previous Chart exists! Continue Reading? (%CONTINUE_READING_DEFAULT_VALUE%^)
+if exist Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%.ti3 (
+    set /p ContinueReading=Previous Chart exists! Continue Reading? (%ContinueReadingDefaultValue%^)
 ) else (
-    set CONTINUE_READING=N
+    set ContinueReading=N
 )
-if "%CONTINUE_READING%"=="" set CONTINUE_READING=%CONTINUE_READING_DEFAULT_VALUE%
+if "%ContinueReading%"=="" set ContinueReading=%ContinueReadingDefaultValue%
 
-if "%READ_MODE%"=="1" (
-    if "%CONTINUE_READING%"=="Y" (
-        chartread -v -H -T0.4 -r Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
+if "%ReadMode%"=="1" (
+    if "%ContinueReading%"=="Y" (
+        chartread -v -H -T0.4 -r Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%
     ) else (
-        chartread -v -H -T0.4 Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
+        chartread -v -H -T0.4 Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%
     )
 ) else (
-    if "%CONTINUE_READING%"=="Y" (
-        chartread -v -H -T0.4 -p -P -r Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
+    if "%ContinueReading%"=="Y" (
+        chartread -v -H -T0.4 -p -P -r Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%
     ) else (
-        chartread -v -H -T0.4 -p -P Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
+        chartread -v -H -T0.4 -p -P Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%
     )
 )
 

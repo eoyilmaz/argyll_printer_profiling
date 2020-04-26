@@ -1,21 +1,21 @@
 @echo off
-mkdir Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%
+mkdir Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%
 
-set /a GRAY_PATH_COUNT=%NUMBER_OF_PAGES% * 16
+set /a GrayPatchCount=%NumberOfPages% * 16
 
 
-if "%PRECONDITION_PROFILE_PATH%" == "" (
-    targen -v -d2 -G -g%GRAY_PATH_COUNT% -f%PATCH_COUNT% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
+if "%PreconditionProfilePath%" == "" (
+    targen -v -d2 -G -g%GrayPatchCount% -f%PatchCount% Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%
 ) else (
-    targen -v -d2 -G -g%GRAY_PATH_COUNT% -f%PATCH_COUNT% -c %PRECONDITION_PROFILE_PATH% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
+    targen -v -d2 -G -g%GrayPatchCount% -f%PatchCount% -c %PreconditionProfilePath% Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%
 )
 
-if "%USE_HIGH_DENSITY_MODE%"=="True" (
+if "%UseHighDensityMode%"=="True" (
     rem use i1 pro as the device to print but later use ColorMunki Photo to read
-    printtarg -v -ii1 -h -R1 -T300 -M2 -L -P -p %PAPERSIZE% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
+    printtarg -v -ii1 -h -R1 -T300 -M2 -L -P -p %PaperSize% Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%
 ) else (
     rem use ColorMunki Photo as the device
-    printtarg -v -iCM -h -R1 -T300 -M2 -L -P -p %PAPERSIZE% Outputs\%PRINTERBRAND%_%PRINTERMODEL%\%PROFILEDATE%\%PROFILENAME%
+    printtarg -v -iCM -h -R1 -T300 -M2 -L -P -p %PaperSize% Outputs\%PrinterBrand%_%PrinterModel%\%ProfileDate%\%ProfileName%
 )
 
 echo Step 2 Finished!

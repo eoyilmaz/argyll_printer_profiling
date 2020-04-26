@@ -1,28 +1,28 @@
 @echo off
 
 rem Set default values
-set PRINTERBRAND_DEFAULT_VALUE=Canon
-set PRINTERMODEL_DEFAULT_VALUE=iX6800_Series
-set PAPERBRAND_DEFAULT_VALUE=Kodak
-set PAPERMODEL_DEFAULT_VALUE=UPPP
-set PAPERFINISH_DEFAULT_VALUE=Glossy
-set PAPERSIZE_DEFAULT_VALUE=A4
-set INK_BRAND_DEFAULT_VALUE=Canon
-set USE_HIGH_DENSITY_MODE_DEFAULT_VALUE=True
-set NUMBER_OF_PAGES_DEFAULT_VALUE=1
-set PER_PAGE_PATCH_COUNT_DEFAULT_VALUE=
+set PrinterBrandDefaultValue=Canon
+set PrinterModelDefaultValue=iX6800_Series
+set PaperBrandDefaultValue=Kodak
+set PaperModelDefaultValue=UPPP
+set PaperFinishDefaultValue=Glossy
+set PaperSizeDefaultValue=A4
+set InkBrandDefaultValue=Canon
+set UseHighDensityModeDefaultValue=True
+set NumberOfPagesDefaultValue=1
+set PerPagePatchCountDefaultValue=
 
 rem =================================================
-rem If the USE_HIGH_DENSITY_MODE_DEFAULT_VALUE is set
+rem If the UseHighDensityModeDefaultValue is set
 rem to True the system uses the i1pro patch pattern
 rem which is much denser than the Color munki one.
 rem
-rem If USE_HIGH_DENSITY_MODE_DEFAULT_VALUE is set
+rem If UseHighDensityModeDefaultValue is set
 rem anything other than True, then the system will use
 rem two A4 pages or one A3 page and will set the:
 rem
-rem PATCH_COUNT_A4_DEFAULT_VALUE=420
-rem PATCH_COUNT_A3_DEFAULT_VALUE=460
+rem PatchCountA4DefaultValue=420
+rem PatchCountA3DefaultValue=460
 rem
 rem by setting the device to i1pro and the margins to 2 mm
 rem it is possible to print
@@ -37,73 +37,73 @@ rem =================================================
 
 
 rem Erase previous values
-set PRINTERBRAND=
-set PRINTERMODEL=
-set PAPERBRAND=
-set PAPERMODEL=
-set PAPERFINISH=
-set PAPERSIZE=
-set INK_BRAND=
-set PRECONDITION_PROFILE_PATH=
-set NUMBER_OF_PAGES=
-set PATCH_COUNT=
-set USE_HIGH_DENSITY_MODE=
-set COPYRIGHT=
+set PrinterBrand=
+set PrinterModel=
+set PaperBrand=
+set PaperModel=
+set PaperFinish=
+set PaperSize=
+set InkBrand=
+set PreconditionProfilePath=
+set NumberOfPages=
+set PatchCount=
+set UseHighDensityMode=
+set Copyright=
 
 rem Request user values
-set /p PRINTERBRAND=Printer Brand? (%PRINTERBRAND_DEFAULT_VALUE%)
-if "%PINTERBRAND%"=="" set PRINTERBRAND=%PRINTERBRAND_DEFAULT_VALUE%
+set /p PrinterBrand=Printer Brand? (%PrinterBrandDefaultValue%)
+if "%PINTERBRAND%"=="" set PrinterBrand=%PrinterBrandDefaultValue%
 
-set /p PRINTERMODEL=Printer Model? (%PRINTERMODEL_DEFAULT_VALUE%)
-if "%PRINTERMODEL%"=="" set PRINTERMODEL=%PRINTERMODEL_DEFAULT_VALUE%
+set /p PrinterModel=Printer Model? (%PrinterModelDefaultValue%)
+if "%PrinterModel%"=="" set PrinterModel=%PrinterModelDefaultValue%
 
-set /p PAPERBRAND=Paper Brand? (%PAPERBRAND_DEFAULT_VALUE%)
-if "%PAPERBRAND%"=="" set PAPERBRAND=%PAPERBRAND_DEFAULT_VALUE%
+set /p PaperBrand=Paper Brand? (%PaperBrandDefaultValue%)
+if "%PaperBrand%"=="" set PaperBrand=%PaperBrandDefaultValue%
 
-set /p PAPERMODEL=Paper Model? (%PAPERMODEL_DEFAULT_VALUE%)
-if "%PAPERMODEL%"=="" set PAPERMODEL=%PAPERMODEL_DEFAULT_VALUE%
+set /p PaperModel=Paper Model? (%PaperModelDefaultValue%)
+if "%PaperModel%"=="" set PaperModel=%PaperModelDefaultValue%
 
-set /p PAPERFINISH=Paper Finish? (%PAPERFINISH_DEFAULT_VALUE%)
-if "%PAPERFINISH%"=="" set PAPERFINISH=%PAPERFINISH_DEFAULT_VALUE%
+set /p PaperFinish=Paper Finish? (%PaperFinishDefaultValue%)
+if "%PaperFinish%"=="" set PaperFinish=%PaperFinishDefaultValue%
 
-set /p PAPERSIZE=Paper Size? (%PAPERSIZE_DEFAULT_VALUE%)
-if "%PAPERSIZE%"=="" set PAPERSIZE=%PAPERSIZE_DEFAULT_VALUE%
+set /p PaperSize=Paper Size? (%PaperSizeDefaultValue%)
+if "%PaperSize%"=="" set PaperSize=%PaperSizeDefaultValue%
 
-set /p INK_BRAND=Ink Brand? (%INK_BRAND_DEFAULT_VALUE%)
-if "%INK_BRAND%"=="" set INK_BRAND=%INK_BRAND_DEFAULT_VALUE%
+set /p InkBrand=Ink Brand? (%InkBrandDefaultValue%)
+if "%InkBrand%"=="" set InkBrand=%InkBrandDefaultValue%
 
-set /p USE_HIGH_DENSITY_MODE=Use High Density Mode? (%USE_HIGH_DENSITY_MODE_DEFAULT_VALUE%)
-if "%USE_HIGH_DENSITY_MODE%"=="" set USE_HIGH_DENSITY_MODE=%USE_HIGH_DENSITY_MODE_DEFAULT_VALUE%
+set /p UseHighDensityMode=Use High Density Mode? (%UseHighDensityModeDefaultValue%)
+if "%UseHighDensityMode%"=="" set UseHighDensityMode=%UseHighDensityModeDefaultValue%
 
-set /p NUMBER_OF_PAGES=Number of pages to be used in profiling? (%NUMBER_OF_PAGES_DEFAULT_VALUE%)
-if "%NUMBER_OF_PAGES%"=="" set NUMBER_OF_PAGES=%NUMBER_OF_PAGES_DEFAULT_VALUE%
+set /p NumberOfPages=Number of pages to be used in profiling? (%NumberOfPagesDefaultValue%)
+if "%NumberOfPages%"=="" set NumberOfPages=%NumberOfPagesDefaultValue%
 
-if "%USE_HIGH_DENSITY_MODE%"=="True" (
-    set PER_PAGE_PATCH_COUNT_A4_DEFAULT_VALUE=600
-    set PER_PAGE_PATCH_COUNT_A3_DEFAULT_VALUE=1260
+if "%UseHighDensityMode%"=="True" (
+    set PerPagePatchCountA4DefaultValue=600
+    set PerPagePatchCountA3DefaultValue=1260
 ) else (
-    set PER_PAGE_PATCH_COUNT_A4_DEFAULT_VALUE=210
-    set PER_PAGE_PATCH_COUNT_A3_DEFAULT_VALUE=460
+    set PerPagePatchCountA4DefaultValue=210
+    set PerPagePatchCountA3DefaultValue=460
 )
 
-if "%PAPERSIZE%"=="A4" set PER_PAGE_PATCH_COUNT_DEFAULT_VALUE=%PER_PAGE_PATCH_COUNT_A4_DEFAULT_VALUE%
-if "%PAPERSIZE%"=="A3" set PER_PAGE_PATCH_COUNT_DEFAULT_VALUE=%PER_PAGE_PATCH_COUNT_A3_DEFAULT_VALUE%
-if "%PATCH_COUNT%"=="" set /a PATCH_COUNT=%NUMBER_OF_PAGES% * %PER_PAGE_PATCH_COUNT_DEFAULT_VALUE%
+if "%PaperSize%"=="A4" set PerPagePatchCountDefaultValue=%PerPagePatchCountA4DefaultValue%
+if "%PaperSize%"=="A3" set PerPagePatchCountDefaultValue=%PerPagePatchCountA3DefaultValue%
+if "%PatchCount%"=="" set /a PatchCount=%NumberOfPages% * %PerPagePatchCountDefaultValue%
 
-set /p PRECONDITION_PROFILE_PATH=Pre-conditioning Profile Path? ()
+set /p PreconditionProfilePath=Pre-conditioning Profile Path? ()
 
-set /p COPYRIGHT=Copyright Info?
+set /p Copyright=Copyright Info?
 
 
 rem get date time string
-for /f "tokens=1-3 delims=/. " %%a in ('date /t') do (set PROFILEDATE=%%c%%b%%a)
-for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set PROFILETIME=%%a%%b)
+for /f "tokens=1-3 delims=/. " %%a in ('date /t') do (set ProfileDate=%%c%%b%%a)
+for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set ProfileTime=%%a%%b)
 
 rem prepare profile name
-set PROFILENAME=%PRINTERBRAND%_%PRINTERMODEL%_%PAPERBRAND%_%PAPERMODEL%_%PAPERFINISH%_%PAPERSIZE%_%INK_BRAND%_%PROFILEDATE%_%PROFILETIME%
+set ProfileName=%PrinterBrand%_%PrinterModel%_%PaperBrand%_%PaperModel%_%PaperFinish%_%PaperSize%_%InkBrand%_%ProfileDate%_%ProfileTime%
 
 rem inform user
-echo Profile name is: %PROFILENAME%
+echo Profile name is: %ProfileName%
 
 echo Step 1 Finished!
 echo Run Next Step (2_generate_targets)
