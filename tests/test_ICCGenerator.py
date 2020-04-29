@@ -759,6 +759,85 @@ def test_copyright_info_attribute_is_working_properly():
     assert icc_gen.copyright_info == test_value
 
 
+def test_precondition_profile_path_argument_is_skipped():
+    """testing if the default value is used when the precondition_profile_path argument
+    is skipped
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    assert icc_gen.precondition_profile_path == ""
+
+
+def test_precondition_profile_path_argument_is_none():
+    """testing if precondition_profile_path argument is set to None will raise an TypeError
+    """
+    from icc_generator import ICCGenerator
+    import pytest
+    with pytest.raises(TypeError) as cm:
+        icc_gen = ICCGenerator(precondition_profile_path=None)
+
+    assert str(cm.value) == "ICCGenerator.precondition_profile_path should be a str, not NoneType"
+
+
+def test_precondition_profile_path_attribute_is_set_to_none():
+    """testing if an TypeError will be raised when the precondition_profile_path
+    attribute is set to None
+    """
+    from icc_generator import ICCGenerator
+    import pytest
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.precondition_profile_path = None
+
+    assert str(cm.value) == "ICCGenerator.precondition_profile_path should be a str, not NoneType"
+
+
+def test_precondition_profile_path_argument_is_not_a_string():
+    """testing if a TypeError will be raised if the precondition_profile_path argument
+    value is not a string
+    """
+    from icc_generator import ICCGenerator
+    import pytest
+    with pytest.raises(TypeError) as cm:
+        icc_gen = ICCGenerator(precondition_profile_path=312)
+
+    assert str(cm.value) == "ICCGenerator.precondition_profile_path should be a str, not int"
+
+
+def test_precondition_profile_path_attribute_is_not_set_to_a_string():
+    """testing if a TypeError will be raised when the precondition_profile_path attribute
+    is set to a value other than a string
+    """
+    from icc_generator import ICCGenerator
+    import pytest
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.precondition_profile_path = 443
+
+    assert str(cm.value) == "ICCGenerator.precondition_profile_path should be a str, not int"
+
+
+def test_precondition_profile_path_argument_is_working_properly():
+    """testing if the precondition_profile_path argument value is properly passed to the
+    precondition_profile_path attribute
+    """
+    from icc_generator import ICCGenerator
+    test_value = 'Epson'
+    icc_gen = ICCGenerator(precondition_profile_path=test_value)
+    assert icc_gen.precondition_profile_path == test_value
+
+
+def test_precondition_profile_path_attribute_is_working_properly():
+    """testing if the precondition_profile_path attribute is working properly
+    """
+    from icc_generator import ICCGenerator
+    test_value = 'Epson'
+    icc_gen = ICCGenerator()
+    assert icc_gen.precondition_profile_path != test_value
+    icc_gen.precondition_profile_path = test_value
+    assert icc_gen.precondition_profile_path == test_value
+
+
 def test_use_high_density_mode_argument_is_skipped():
     """testing if the default value is used when the use_high_density_mode
     argument is skipped

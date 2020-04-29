@@ -84,7 +84,7 @@ class ICCGenerator(object):
 
     def __init__(self, printer_brand="Canon", printer_model="iX6850", paper_brand="Kodak", paper_model="UPPP",
                  paper_finish="Glossy", paper_size=A4, ink_brand="CanonInk", use_high_density_mode=True,
-                 number_of_pages=1, copyright_info=""):
+                 number_of_pages=1, copyright_info="", precondition_profile_path=""):
 
         self._printer_brand = None
         self.printer_brand = printer_brand
@@ -115,6 +115,9 @@ class ICCGenerator(object):
 
         self._copyright_info = None
         self.copyright_info = copyright_info
+
+        self._precondition_profile_path = None
+        self.precondition_profile_path = precondition_profile_path
 
         import datetime
         now = datetime.datetime.now()
@@ -314,6 +317,22 @@ class ICCGenerator(object):
                 )
             )
         self._copyright_info = copyright_info
+
+    @property
+    def precondition_profile_path(self):
+        return self._precondition_profile_path
+
+    @precondition_profile_path.setter
+    def precondition_profile_path(self, precondition_profile_path):
+        """getter for the precondition_profile_path attribute
+        """
+        if not isinstance(precondition_profile_path, str):
+            raise TypeError(
+                "%s.precondition_profile_path should be a str, not %s" % (
+                    self.__class__.__name__, precondition_profile_path.__class__.__name__
+                )
+            )
+        self._precondition_profile_path = precondition_profile_path
 
     @property
     def profile_name(self):
