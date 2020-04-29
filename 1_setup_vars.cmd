@@ -86,7 +86,7 @@ rem 600 (25x24) 8x10 mm patches for A4 and
 rem 1260 (36x35) 8x10 mm patches for A3
 rem on a single page
 rem 
-rem what I want to achive here is to use the minimum
+rem what I want to achieve here is to use the minimum
 rem amount of paper for profiling and still have an
 rem excellent result
 rem =================================================
