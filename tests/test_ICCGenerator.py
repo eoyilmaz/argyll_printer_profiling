@@ -982,8 +982,37 @@ def test_patch_count_is_read_only():
     with pytest.raises(AttributeError) as cm:
         icc_gen.patch_count = 120
 
-    # assert str(cm.value) == 'Patch count can not be set. Please update paper_size, ' \
-    #                  'use_high_density_mode and page_count'
+
+def test_gray_patch_count_is_updated_properly():
+    """testing if the gray_patch_count is properly updated with the paper
+    size and use_high_density_mode attribute values
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # Set the paper size to A4
+    icc_gen.paper_size = icc_gen.A4
+    icc_gen.number_of_pages = 1
+    assert icc_gen.gray_patch_count == 16
+
+    icc_gen.number_of_pages = 2
+    assert icc_gen.gray_patch_count == 32
+
+    icc_gen.number_of_pages = 3
+    assert icc_gen.gray_patch_count == 48
+
+    icc_gen.number_of_pages = 4
+    assert icc_gen.gray_patch_count == 64
+
+
+def test_gray_patch_count_is_read_only():
+    """testing if the gray_patch_count is a read only property
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    import pytest
+    with pytest.raises(AttributeError) as cm:
+        icc_gen.gray_patch_count = 120
 
 
 def test_patch_count_is_updating_properly():

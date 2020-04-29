@@ -375,6 +375,12 @@ class ICCGenerator(object):
         """
         return self.per_page_patch_count * self.number_of_pages
 
+    @property
+    def gray_patch_count(self):
+        """getter for the gray_patch_count attribute
+        """
+        return self.number_of_pages * 16
+
     def generate_targets(self):
         """generates the required Tiff file or files depending on the page
         count
