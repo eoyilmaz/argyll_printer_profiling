@@ -1258,8 +1258,8 @@ def test_generate_target_creates_the_output_folder(file_collector):
     # set it to use only one A4 page
     icc_gen.number_of_pages = 1
     icc_gen.paper_size = icc_gen.A4
-    file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
+    file_collector.append(icc_gen.profile_absolute_path)
+    icc_gen.generate_target()
     import os
     assert os.path.exists(
         os.path.expanduser(
@@ -1280,7 +1280,7 @@ def test_generate_target_generates_ti_file(file_collector):
     icc_gen.number_of_pages = 1
     icc_gen.paper_size = icc_gen.A4
     file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
+    icc_gen.generate_target()
 
     import os
     expected_path = os.path.expanduser(
@@ -1320,8 +1320,8 @@ def test_generate_tif_files_will_generate_tif_files_from_target_file(file_collec
     icc_gen.number_of_pages = 1
     icc_gen.paper_size = icc_gen.A4
     file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
 
     # import time
     # time.sleep(20)
@@ -1360,8 +1360,8 @@ def test_generate_tif_files_will_generates_correct_amount_of_tif_files(file_coll
     # so it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
 
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
 
     import os
     assert os.path.exists(
@@ -1398,8 +1398,8 @@ def test_generate_tif_files_will_fill_tif_files_attribute_single_page(file_colle
     # so it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
 
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
 
     import os
     tif1 = os.path.expanduser(
@@ -1427,8 +1427,8 @@ def test_generate_tif_files_will_fill_tif_files_attribute_more_than_one_page(fil
     # so it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
 
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
 
     import os
     tif1 = os.path.expanduser(
@@ -1465,8 +1465,8 @@ def test_generate_tif_files_will_clear_the_tif_files_list(file_collector):
     # so it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
 
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
 
     import os
     tif1 = os.path.expanduser(
@@ -1490,8 +1490,8 @@ def test_generate_tif_files_will_clear_the_tif_files_list(file_collector):
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
 
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
 
     import os
     tif1 = os.path.expanduser(
@@ -1521,8 +1521,8 @@ def test_generate_tif_files_with_high_density_mode(file_collector, patch_run_ext
     # so it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
 
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
     assert any(['-ii1' in arg for arg in final_command])
@@ -1545,8 +1545,8 @@ def test_generate_tif_files_with_normal_density_mode(file_collector, patch_run_e
     # so it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
 
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
     assert any(['-iCM' in arg for arg in final_command])
@@ -1561,9 +1561,9 @@ def test_print_charts(file_collector, patch_run_external_process):
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
 
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
-    list(icc_gen.print_charts())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
 
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
@@ -1577,10 +1577,10 @@ def test_read_charts_calls_chartread_command(file_collector, patch_run_external_
     icc_gen = ICCGenerator()
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
-    list(icc_gen.print_charts())
-    list(icc_gen.read_charts())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
+    icc_gen.read_charts()
 
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
@@ -1595,10 +1595,10 @@ def test_read_charts_with_resume_set_to_True(file_collector, patch_run_external_
     icc_gen = ICCGenerator()
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
-    list(icc_gen.print_charts())
-    list(icc_gen.read_charts(resume=True))
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
+    icc_gen.read_charts(resume=True)
 
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
@@ -1615,10 +1615,10 @@ def test_read_charts_with_read_mode_set_to_1(file_collector, patch_run_external_
     icc_gen = ICCGenerator()
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
-    list(icc_gen.print_charts())
-    list(icc_gen.read_charts())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
+    icc_gen.read_charts(read_mode=1)
 
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
@@ -1635,11 +1635,11 @@ def test_generate_profile_1(file_collector, patch_run_external_process):
     icc_gen = ICCGenerator()
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
-    list(icc_gen.print_charts())
-    list(icc_gen.read_charts())
-    list(icc_gen.generate_profile())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
+    icc_gen.read_charts()
+    icc_gen.generate_profile()
 
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
@@ -1662,11 +1662,11 @@ def test_generate_profile_2(file_collector, patch_run_external_process):
     icc_gen.number_of_pages = 1
     icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
     file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
-    list(icc_gen.print_charts())
-    list(icc_gen.read_charts())
-    list(icc_gen.generate_profile())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
+    icc_gen.read_charts()
+    icc_gen.generate_profile()
 
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
@@ -1684,18 +1684,72 @@ def test_check_profile(file_collector, patch_run_external_process):
     icc_gen.number_of_pages = 1
     icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
     file_collector.append(icc_gen.profile_path)
-    list(icc_gen.generate_target())
-    list(icc_gen.generate_tif_files())
-    list(icc_gen.print_charts())
-    list(icc_gen.read_charts())
-    list(icc_gen.generate_profile())
-    list(icc_gen.check_profile())
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
+    icc_gen.read_charts()
+    icc_gen.generate_profile()
+    icc_gen.check_profile()
 
     final_command = patch_run_external_process[-1]
     assert 'profcheck' in final_command[0]
 
     assert any(["-k" in arg for arg in final_command])
     assert any(["-v2" in arg for arg in final_command])
+    assert not any(["-s" in arg for arg in final_command])
+
+
+def test_check_profile_with_sort(file_collector, patch_run_external_process):
+    """testing if the check_profile method is working properly
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.number_of_pages = 1
+    icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
+    icc_gen.read_charts()
+    icc_gen.generate_profile()
+    icc_gen.check_profile(sort_by_dE=True)
+
+    final_command = patch_run_external_process[-1]
+    assert 'profcheck' in final_command[0]
+
+    assert any(["-k" in arg for arg in final_command])
+    assert any(["-v2" in arg for arg in final_command])
+    assert any(["-s" in arg for arg in final_command])
+
+
+def test_check_profile_with_correct_file_extension(file_collector, patch_run_external_process):
+    """testing if the check_profile method is using the correct profile file extension, that is ICM on Windows and ICC
+    on Linux
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.number_of_pages = 1
+    icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.generate_target()
+    icc_gen.generate_tif_files()
+    icc_gen.print_charts()
+    icc_gen.read_charts()
+    icc_gen.generate_profile()
+    icc_gen.check_profile(sort_by_dE=True)
+
+    final_command = patch_run_external_process[-1]
+    assert 'profcheck' in final_command[0]
+
+    import os
+    if os.name == 'nt':
+        assert any([".icm" in arg for arg in final_command])
+        assert not any([".icc" in arg for arg in final_command])
+    else:
+        assert not any([".icm" in arg for arg in final_command])
+        assert any([".icc" in arg for arg in final_command])
 
 
 def test_install_profile_1(file_collector, patch_run_external_process):

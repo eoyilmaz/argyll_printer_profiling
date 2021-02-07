@@ -3,12 +3,14 @@
 """This is the advanced GUI version of the Windows Command Line script
 that does the ICC Profile creation.
 """
+import os
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
 __version__ = "0.1.0"
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class ICCGenerator(object):
@@ -129,7 +131,7 @@ class ICCGenerator(object):
         import datetime
         now = datetime.datetime.now()
         date_str = now.strftime("%Y%m%d")
-        time_str = now.strftime("%H%m")
+        time_str = now.strftime("%H%M")
 
         self.profile_date = date_str
         self.profile_time = time_str
@@ -149,7 +151,6 @@ class ICCGenerator(object):
         self.tif_files = []
 
         # The output path is defined by the Operating system
-        import os
         self.output_path = "~/.local/share/icc/"
         if os.name == 'nt':
             self.output_path = '%WINDIR%/System32/spool/drivers/color/'
@@ -361,7 +362,6 @@ class ICCGenerator(object):
     def profile_absolute_path(self):
         """returns the absolute path of profile_path variable
         """
-        import os
         return os.path.expandvars(
             os.path.expanduser(
                 self.profile_path
@@ -372,7 +372,6 @@ class ICCGenerator(object):
     def profile_absolute_full_path(self):
         """returns the absolute path of profile_path variable
         """
-        import os
         return os.path.join(self.profile_absolute_path, self.profile_name)
 
     @property
@@ -423,40 +422,47 @@ class ICCGenerator(object):
         return self.number_of_pages * 16
 
     @classmethod
-    def run_external_process(cls, command):
+    def run_external_process(cls, command, shell=False):
         """Runs an external process and yields the output
 
         :param command: The command to run
+        :param bool shell: A bool value for executing the command in shell or not.
         """
         import subprocess
-        process = subprocess.Popen(
-            command, stderr=subprocess.PIPE
-        )
-        # loop until process finishes and capture stderr output
-        stderr_buffer = []
-        while True:
-            stderr = process.stderr.readline()
+        if not shell:
+            process = subprocess.Popen(
+                command, stderr=subprocess.PIPE
+            )
+            # loop until process finishes and capture stderr output
+            stderr_buffer = []
+            while True:
+                stderr = process.stderr.readline()
 
-            if stderr == b'' and process.poll() is not None:
-                break
+                if stderr == b'' and process.poll() is not None:
+                    break
 
-            if stderr != b'':
-                stderr = stderr.decode('utf-8').strip()
-                stderr_buffer.append(stderr)
-                yield stderr
+                if stderr != b'':
+                    stderr = stderr.decode('utf-8').strip()
+                    stderr_buffer.append(stderr)
+                    yield stderr
 
-        # flatten the buffer
-        stderr_buffer = '\n'.join(stderr_buffer)
-        return_code = process.returncode
+            # flatten the buffer
+            stderr_buffer = '\n'.join(stderr_buffer)
+            return_code = process.returncode
 
-        if return_code:
-            # there is an error
-            raise RuntimeError(stderr_buffer)
+            if return_code:
+                # there is an error
+                raise RuntimeError(stderr_buffer)
+        else:
+            command = " ".join(command)
+            # process = subprocess.Popen(
+            #     command, stderr=subprocess.PIPE, shell=shell
+            # )
+            os.system(command)
 
     def generate_target(self):
         """generates the required ti1 file
         """
-        import os
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
@@ -471,14 +477,14 @@ class ICCGenerator(object):
         command += [self.profile_absolute_full_path]
 
         # first call the targen command
-        # print("generate_target command: %s" % ' '.join(command))
-        yield from self.run_external_process(command)
+        # yield from self.run_external_process(command)
+        for output in self.run_external_process(command):
+            print(output)
 
     def generate_tif_files(self):
         """generates the required Tiff file or files depending on the page
         count
         """
-        import os
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
@@ -518,7 +524,9 @@ class ICCGenerator(object):
 
         # first call the targen command
         # print("generate_tif_files command: %s" % ' '.join(command))
-        yield from self.run_external_process(command)
+        # yield from self.run_external_process(command)
+        for output in self.run_external_process(command):
+            print(output)
 
     def print_charts(self):
         """runs the proper application with the charts already open
@@ -533,7 +541,6 @@ class ICCGenerator(object):
         if not will raise a RuntimeError to inform the user, if they exists
         properly it will open GIMP with the Tiff file.
         """
-        import os
         if os.name == 'nt':  # Windows
             # call Dry Creek Photo Print Utility first
             # if it fails then try to call ACPU
@@ -543,7 +550,8 @@ class ICCGenerator(object):
         elif os.name == 'posix':  # Linux
             # call Gimp with the TIFF Files
             command = ['/usr/bin/gimp'] + self.tif_files
-            yield from self.run_external_process(command)
+        for output in self.run_external_process(command):
+            print(output)
 
     def read_charts(self, resume=False, read_mode=0):
         """Reads the printed chart using the device
@@ -562,13 +570,12 @@ class ICCGenerator(object):
 
         :return:
         """
-        import os
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
         # chartread command
         command = ["chartread", "-v", "-H", "-T 0.4"]
-        if read_mode == 0:  # Default
+        if read_mode == 1:
             command += ["-p", "-P"]
 
         if resume:
@@ -577,18 +584,24 @@ class ICCGenerator(object):
         command += [self.profile_absolute_full_path]
 
         # first call the targen command
-        yield from self.run_external_process(command)
+
+        # os.system(" ".join(command))
+        # yield from self.run_external_process(command, shell=True)
+        print('command: %s' % " ".join(command))
+        for output in self.run_external_process(command, shell=True):
+            print(output)
 
     def generate_profile(self):
         """
         """
-        import os
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
         # colprof command
         command = [
-            "colprof", "-v", "-ph", "-r0.5", "-S", "AdobeRGB.icc", "-cmt", "-dpp",
+            "colprof", "-v", "-qh", "-r0.5", "-S",
+            os.path.join(HERE, "AdobeRGB.icc"),
+            "-cmt", "-dpp",
             "-D%s" % self.profile_name, "-Zr"
         ]
 
@@ -598,24 +611,37 @@ class ICCGenerator(object):
         command += [self.profile_absolute_full_path]
 
         # call the command
-        yield from self.run_external_process(command)
+        # yield from self.run_external_process(command)
+        for output in self.run_external_process(command):
+            print(output)
 
-    def check_profile(self):
+    def check_profile(self, sort_by_dE=False):
         """Checks the profile quality
         """
-        import os
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
         # prof_check
         command = [
             "profcheck", "-k", "-v2",
-            "%s.ti3" % self.profile_absolute_full_path,
-            "%s.icm" % self.profile_absolute_full_path
         ]
+        if sort_by_dE:
+            command.append('-s')
+
+        command.append("%s.ti3" % self.profile_absolute_full_path)
+
+        if os.name == 'nt':
+            # windows uses *.icm file extension
+            command.append("%s.icm" % self.profile_absolute_full_path)
+        else:
+            # OSX and Linux uses *.icc file extension
+            command.append("%s.icc" % self.profile_absolute_full_path)
+
 
         # call the command
-        yield from self.run_external_process(command)
+        # yield from self.run_external_process(command)
+        for output in self.run_external_process(command):
+            print(output)
 
     def install_profile(self):
         """Installs the generated profile to appropriate folders depending on the current OS
@@ -629,7 +655,6 @@ class ICCGenerator(object):
             ~/.local/share/icc/
 
         """
-        import os
         import shutil
         # check if the profile is not generated yet
         icc_profile_absolute_full_path = "%s.icc" % self.profile_absolute_full_path

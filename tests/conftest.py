@@ -14,7 +14,6 @@ def file_collector():
 
     import os
     import glob
-    import shutil
     logger.debug("===========================")
     logger.debug("Removing collected file paths")
     for f in files_and_folders:
@@ -48,7 +47,7 @@ def patch_run_external_process():
 
     commands = []
 
-    def patched_run_external_process(self, command):
+    def patched_run_external_process(self, command, shell=False):
         commands.append(command)
         yield ''
 
