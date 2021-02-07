@@ -1129,8 +1129,47 @@ def test_profile_name_is_working_properly():
     assert icc_gen.profile_name == test_value
 
 
-def test_generate_targets():
-    """testing if generate_targets is working properly
+def test_profile_path_template_default_value():
+    """testing if the profile_path_template default value is correct
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    assert icc_gen._profile_path_template == \
+        "~/.cache/ICCGenerator/{printer_brand}_" \
+        "{printer_model}/{profile_date}"
+
+
+def test_profile_path_default_value_is_properly_calculated():
+    """testing if profile_path default value is properly calculated
+    """
+    from icc_generator import ICCGenerator
+    import datetime
+    now = datetime.datetime.now()
+    date_str = now.strftime("%Y%m%d")
+    time_str = now.strftime("%H%m")
+    icc_gen = ICCGenerator()
+
+    assert icc_gen.profile_date == date_str
+    assert icc_gen.profile_time == time_str
+    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
+    assert icc_gen.profile_path == profile_path
+
+
+def test_profile_path_is_read_only():
+    """testing if the profile_path property is read only
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # the profile_path could be updated in any ways the user wanted
+    import pytest
+    with pytest.raises(AttributeError):
+        icc_gen.profile_path = "some value"
+
+
+def test_generate_target_creates_the_output_folder(file_collector):
+    """testing if generate_target will create the output folder
     """
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
@@ -1140,54 +1179,540 @@ def test_generate_targets():
     # set it to use only one A4 page
     icc_gen.number_of_pages = 1
     icc_gen.paper_size = icc_gen.A4
-    icc_gen.generate_targets()
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+    import os
+    assert os.path.exists(
+        os.path.expanduser(
+            os.path.join(icc_gen.output_path)
+        )
+    )
+
+
+def test_generate_target_generates_ti_file(file_collector):
+    """testing if generate_target will generate ti
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 1
+    icc_gen.paper_size = icc_gen.A4
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+
+    import os
+    expected_path = os.path.expanduser(
+        os.path.join(
+            icc_gen.profile_path,
+            "%s%s" % (icc_gen.profile_name, '.ti1')
+        )
+    )
+    assert os.path.exists(expected_path)
+
+
+def test_generate_target_yields_command_line_results(file_collector):
+    """testing if generate_target will yield the command line result
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 1
+    icc_gen.paper_size = icc_gen.A4
+    file_collector.append(icc_gen.profile_path)
+    for output in icc_gen.generate_target():
+        assert isinstance(output, str)
+
+
+def test_generate_tif_files_will_generate_tif_files_from_target_file(file_collector):
+    """testing if generate_tif_files will generate tif file or files from target file
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 1
+    icc_gen.paper_size = icc_gen.A4
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+
+    # import time
+    # time.sleep(20)
+
+    import os
+    profile_absolute_full_path = os.path.expanduser(
+        os.path.join(
+            icc_gen.profile_path,
+            "%s%s" % (icc_gen.profile_name, '.tif')
+        )
+    )
+    print("profile_absolute_full_path: %s" % profile_absolute_full_path)
+    assert os.path.exists(profile_absolute_full_path)
+    assert not os.path.exists(
+        os.path.expanduser(
+            os.path.join(
+                icc_gen.profile_path,
+                "%s%s" % (icc_gen.profile_name, '_02.tif')
+            )
+        )
+    )
+
+
+def test_generate_tif_files_will_generates_correct_amount_of_tif_files(file_collector):
+    """testing if generate_tif_files correct amount of tif files file
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 2
+    icc_gen.paper_size = icc_gen.A4
+    # append the folder to the file_collector
+    # so it is cleaned up after the test
+    file_collector.append(icc_gen.profile_path)
+
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
 
     import os
     assert os.path.exists(
-        os.path.join(icc_gen.output_path, icc_gen.profile_name, '.ti1')
+        os.path.expanduser(
+            os.path.join(
+                icc_gen.profile_path,
+                "%s%s" % (icc_gen.profile_name, '_01.tif')
+            )
+        )
     )
     assert os.path.exists(
-        os.path.join(icc_gen.output_path, icc_gen.profile_name, '.ti2')
+        os.path.expanduser(
+            os.path.join(
+                icc_gen.profile_path,
+                "%s%s" % (icc_gen.profile_name, '_02.tif')
+            )
+        )
     )
 
-    assert os.path.exists(
-        os.path.join(icc_gen.output_path, icc_gen.profile_name, '_01.tif')
+
+def test_generate_tif_files_will_fill_tif_files_attribute_single_page(file_collector):
+    """testing if generate_tif_files will fill the tif_files list correctly
+    when there is only one page
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 1
+    icc_gen.paper_size = icc_gen.A4
+    # append the folder to the file_collector
+    # so it is cleaned up after the test
+    file_collector.append(icc_gen.profile_path)
+
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+
+    import os
+    tif1 = os.path.expanduser(
+        os.path.join(
+            icc_gen.profile_path,
+            "%s%s" % (icc_gen.profile_name, '.tif')
+        )
     )
 
+    assert icc_gen.tif_files[0] == tif1
 
-def test_print_charts():
+
+def test_generate_tif_files_will_fill_tif_files_attribute_more_than_one_page(file_collector):
+    """testing if generate_tif_files will fill the tif_files list correctly
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 2
+    icc_gen.paper_size = icc_gen.A4
+    # append the folder to the file_collector
+    # so it is cleaned up after the test
+    file_collector.append(icc_gen.profile_path)
+
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+
+    import os
+    tif1 = os.path.expanduser(
+        os.path.join(
+            icc_gen.profile_path,
+            "%s%s" % (icc_gen.profile_name, '_01.tif')
+        )
+    )
+
+    tif2 = os.path.expanduser(
+        os.path.join(
+            icc_gen.profile_path,
+            "%s%s" % (icc_gen.profile_name, '_02.tif')
+        )
+    )
+
+    assert icc_gen.tif_files[0] == tif1
+    assert icc_gen.tif_files[1] == tif2
+
+
+def test_generate_tif_files_will_clear_the_tif_files_list(file_collector):
+    """testing if generate_tif_files will clear the tif_files list before
+    running to prevent filling it over and over with previous runs
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 2
+    icc_gen.paper_size = icc_gen.A4
+    # append the folder to the file_collector
+    # so it is cleaned up after the test
+    file_collector.append(icc_gen.profile_path)
+
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+
+    import os
+    tif1 = os.path.expanduser(
+        os.path.join(
+            icc_gen.profile_path,
+            "%s%s" % (icc_gen.profile_name, '_01.tif')
+        )
+    )
+
+    tif2 = os.path.expanduser(
+        os.path.join(
+            icc_gen.profile_path,
+            "%s%s" % (icc_gen.profile_name, '_02.tif')
+        )
+    )
+    assert len(icc_gen.tif_files) == 2
+    assert icc_gen.tif_files[0] == tif1
+    assert icc_gen.tif_files[1] == tif2
+
+    # change number of pages to 1
+    icc_gen.number_of_pages = 1
+    file_collector.append(icc_gen.profile_path)
+
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+
+    import os
+    tif1 = os.path.expanduser(
+        os.path.join(
+            icc_gen.profile_path,
+            "%s%s" % (icc_gen.profile_name, '.tif')
+        )
+    )
+
+    assert len(icc_gen.tif_files) == 1
+    assert icc_gen.tif_files[0] == tif1
+
+
+def test_generate_tif_files_with_high_density_mode(file_collector, patch_run_external_process):
+    """testing if generate_tif_files will use i1 Pro as the input device when
+    the use_high_density_mode is set to False
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 2
+    icc_gen.paper_size = icc_gen.A4
+    # append the folder to the file_collector
+    # so it is cleaned up after the test
+    file_collector.append(icc_gen.profile_path)
+
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    # check the final call to the run_external_process
+    final_command = patch_run_external_process[-1]
+    assert any(['-ii1' in arg for arg in final_command])
+
+
+def test_generate_tif_files_with_normal_density_mode(file_collector, patch_run_external_process):
+    """testing if generate_tif_files will use ColorMunki as the input device
+    when the use_high_density_mode is set to False
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+
+    # There should be files under the temp folder
+    # check them
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 2
+    icc_gen.paper_size = icc_gen.A4
+    icc_gen.use_high_density_mode = False
+    # append the folder to the file_collector
+    # so it is cleaned up after the test
+    file_collector.append(icc_gen.profile_path)
+
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    # check the final call to the run_external_process
+    final_command = patch_run_external_process[-1]
+    assert any(['-iCM' in arg for arg in final_command])
+
+
+def test_print_charts(file_collector, patch_run_external_process):
     """testing if the print_charts is working properly
     """
-    # This is hard to test
-    # We need a container that we can install GIMP and GutenPrint when needed
-    # and uninstall when it
-    raise NotImplementedError("Test is not implemented yet")
+    # patch the run_external_process and check the command
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    icc_gen.number_of_pages = 1
+    file_collector.append(icc_gen.profile_path)
+
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    list(icc_gen.print_charts())
+
+    # check the final call to the run_external_process
+    final_command = patch_run_external_process[-1]
+    assert 'gimp' in final_command[0]
 
 
-def test_read_charts():
-    """testing if the read_charts method is working properly
+def test_read_charts_calls_chartread_command(file_collector, patch_run_external_process):
+    """testing if the read_charts method will call chartread
     """
-    # again this is hard to test
-    # we can check if the chartread process is started etc.
-    # and there should be a .ti3 file afterwards
-    raise NotImplementedError("Test is not implemented yet")
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    icc_gen.number_of_pages = 1
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    list(icc_gen.print_charts())
+    list(icc_gen.read_charts())
+
+    # check the final call to the run_external_process
+    final_command = patch_run_external_process[-1]
+    assert 'chartread' in final_command[0]
 
 
-def test_generate_profile():
+def test_read_charts_with_resume_set_to_True(file_collector, patch_run_external_process):
+    """testing if the read_charts method with resume=True will call chartread
+    with -r option
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    icc_gen.number_of_pages = 1
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    list(icc_gen.print_charts())
+    list(icc_gen.read_charts(resume=True))
+
+    # check the final call to the run_external_process
+    final_command = patch_run_external_process[-1]
+    assert 'chartread' in final_command[0]
+
+    assert any(['-r' in arg for arg in final_command])
+
+
+def test_read_charts_with_read_mode_set_to_1(file_collector, patch_run_external_process):
+    """testing if the read_charts method with read_mode=1 will call chartread
+    with -p and -P options
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    icc_gen.number_of_pages = 1
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    list(icc_gen.print_charts())
+    list(icc_gen.read_charts())
+
+    # check the final call to the run_external_process
+    final_command = patch_run_external_process[-1]
+    assert 'chartread' in final_command[0]
+
+    assert any(['-p' in arg for arg in final_command])
+    assert any(['-P' in arg for arg in final_command])
+
+
+def test_generate_profile_1(file_collector, patch_run_external_process):
     """testing if the generate_profile method is working properly
     """
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
-    # again we need some pre build data so when the generate_profile has
-    # run we can check if the ICC Profile is generated
-    raise NotImplementedError("Test is not implemented yet")
+    icc_gen.number_of_pages = 1
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    list(icc_gen.print_charts())
+    list(icc_gen.read_charts())
+    list(icc_gen.generate_profile())
+
+    # check the final call to the run_external_process
+    final_command = patch_run_external_process[-1]
+    assert 'colprof' in final_command[0]
+
+    assert any(['-v' in arg for arg in final_command])
+    assert any(['-ph' in arg for arg in final_command])
+    assert any(['-r0.5' in arg for arg in final_command])
+    assert any(['-S' in arg for arg in final_command])
+    assert any(['-cmt' in arg for arg in final_command])
+    assert any(['-dpp' in arg for arg in final_command])
+    assert any(['-D' in arg for arg in final_command])
 
 
-def test_install_profile():
-    """testing if the install_profile method is working properly
+def test_generate_profile_2(file_collector, patch_run_external_process):
+    """testing if the generate_profile method is working properly
     """
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
+    icc_gen.number_of_pages = 1
+    icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    list(icc_gen.print_charts())
+    list(icc_gen.read_charts())
+    list(icc_gen.generate_profile())
+
+    # check the final call to the run_external_process
+    final_command = patch_run_external_process[-1]
+    assert 'colprof' in final_command[0]
+
+    assert any(['-CErkan Ozgur Yilmaz(c)2021' in arg for arg in final_command])
+
+
+def test_check_profile(file_collector, patch_run_external_process):
+    """testing if the check_profile method is working properly
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.number_of_pages = 1
+    icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
+    file_collector.append(icc_gen.profile_path)
+    list(icc_gen.generate_target())
+    list(icc_gen.generate_tif_files())
+    list(icc_gen.print_charts())
+    list(icc_gen.read_charts())
+    list(icc_gen.generate_profile())
+    list(icc_gen.check_profile())
+
+    final_command = patch_run_external_process[-1]
+    assert 'profcheck' in final_command[0]
+
+    assert any(["-k" in arg for arg in final_command])
+    assert any(["-v2" in arg for arg in final_command])
+
+
+def test_install_profile_1(file_collector, patch_run_external_process):
+    """testing if the install_profile method is working properly
+    """
+    import os
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.number_of_pages = 1
+    icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
+    file_collector.append(icc_gen.profile_path)
+
+    # create a dummy icc file
+    dummy_icc_profile_full_path = os.path.expandvars(
+        os.path.expanduser(
+            os.path.join(icc_gen.profile_path, "%s.icc" % icc_gen.profile_name)
+        )
+    )
+    os.makedirs(os.path.expandvars(os.path.expanduser(icc_gen.profile_path)), exist_ok=True)
+    assert os.path.exists(icc_gen.profile_path)
+    with open(dummy_icc_profile_full_path, "w+") as f:
+        f.write("dummy icc file!!!")
+    assert os.path.exists(dummy_icc_profile_full_path)
+    file_collector.append(dummy_icc_profile_full_path)
+
+    icc_gen.install_profile()
+
     # this is easy
     # just check if ICC file is copied to the correct folder
-    raise NotImplementedError("Test is not implemented yet")
+    import os
+    profile_install_path = None
+    if os.name == 'nt':
+        profile_install_path = os.path.expandvars('$WINDIR/System32spool/drivers/color/%s.icc' % icc_gen.profile_name)
+    elif os.name == 'posix':
+        profile_install_path = os.path.expandvars(
+            os.path.expanduser(
+                '~/.local/share/icc/%s.icc' % icc_gen.profile_name
+            )
+        )
+
+    assert profile_install_path is not None
+    file_collector.append(profile_install_path)
+    assert os.path.exists(
+        os.path.expandvars(
+            profile_install_path
+        )
+    )
+
+
+def test_install_profile_2(file_collector, patch_run_external_process):
+    """testing if the install_profile will raise a RuntimeError if the ICC has not been generated yet
+    """
+    import os
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.number_of_pages = 1
+    icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
+    file_collector.append(icc_gen.profile_path)
+
+    import pytest
+    with pytest.raises(RuntimeError) as cm:
+        icc_gen.install_profile()
+
+    assert str(cm.value) == "ICC file doesn't exist, please generate it first!"
+
+
+def test_default_logger_is_created(file_collector):
+    """testing if a default logger has been created
+    """
+    import logging
+    from icc_generator import logger
+    assert isinstance(logger, logging.Logger)
+
+
+def test_default_log_level_is_warning(file_collector):
+    """testing if the default log level is warning
+    """
+    import logging
+    from icc_generator import logger
+    assert logger.level == logging.WARNING
+
+
+def test_output_path_for_windows(set_to_windows):
+    """testing if the output_path variable is correctly set for Windows
+    """
+    import os
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    assert icc_gen.output_path == '%WINDIR%/System32/spool/drivers/color/'
+
+
+def test_output_path_for_linux(set_to_linux):
+    """testing if the output_path variable is correctly set for Linux
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    assert icc_gen.output_path == '~/.local/share/icc/'

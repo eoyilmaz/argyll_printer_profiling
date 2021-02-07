@@ -3,6 +3,12 @@
 """This is the advanced GUI version of the Windows Command Line script
 that does the ICC Profile creation.
 """
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
+
+
+__version__ = "0.1.0"
 
 
 class ICCGenerator(object):
@@ -12,26 +18,27 @@ class ICCGenerator(object):
 
     Windows Workflow Notes:
 
-    - Use Dry Creek Photo Profile Target Printer or Adobe Color Print Utility.
-    -
+    - Use Dry Creek Photo Profile Target Printer (best option) or Adobe Color Print Utility (buggy, and scales images
+      while printing).
 
     Linux Workflow notes:
 
-    - Gimp + GutenPrint seems to be a very good option
+    - Gimp + GutenPrint seems to be a very good option (set Color Correction to Uncorrected and Image Type to
+      Photograph)
+
     - Use /usr/share/color/icc/ or ~/.local/share/icc to install the profiles
 
-    If the ``use_high_density_mode`` is set to True the system uses
-    the i1pro patch pattern which is much denser than the one for ColorMunki.
+    If the ``use_high_density_mode`` is set to True the system uses the i1pro patch pattern which is much denser than
+    the one for ColorMunki.
 
-    If the ``use_high_density_mode`` is set to anything other than True, then
-    the system will use two A4 pages or one A3 page use:
+    If the ``use_high_density_mode`` is set to anything other than True, then the system will use two A4 pages or one A3
+    page use:
 
     420 patches for A4 (in 2 A4 pages)
     460 patches for A3
 
-    by setting the device to ``i1pro`` and the margins to 2 mm it is possible
-    to print 600 (25x24) 8x10 mm patches for A4 and 1260 (36x35) 8x10 mm
-    patches for A3 on a single page.
+    by setting the device to ``i1pro`` and the margins to 2 mm it is possible to print 600 (25x24) 8x10 mm patches for
+    A4 and 1260 (36x35) 8x10 mm patches for A3 on a single page.
 
     what I want to achieve here is to use the minimum amount of paper for
     profiling and still have an excellent result
@@ -40,11 +47,11 @@ class ICCGenerator(object):
 
         For Windows:
 
-            $APPDATA/ICCGenerator/Outputs/%{printer_brand}_%{printer_model}/%{profile_date}
+            $APPDATA/ICCGenerator/%{printer_brand}_%{printer_model}/%{profile_date}
 
         For Linux:
 
-            ~/.cache/IccGenerator/Outputs/%{printer_brand}_%{printer_model}/%{profile_date}
+            ~/.cache/IccGenerator/%{printer_brand}_%{printer_model}/%{profile_date}
 
     folders.
 
@@ -127,16 +134,10 @@ class ICCGenerator(object):
         self.profile_date = date_str
         self.profile_time = time_str
 
-        # Generated temp files should be placed under a disposable folder
-
         # Profile Path template
-        self.profile_path_template = \
-            "~/.cache/ICCGenerator/Outputs/%{printer_brand}_" \
-            "%{printer_model}/%{profile_date}"
-
-        # update the output path according to the OS
-
-        self.profile_path = ""
+        self._profile_path_template = \
+            "~/.cache/ICCGenerator/{printer_brand}_" \
+            "{printer_model}/{profile_date}"
 
         # Profile name template
         self.profile_name_template = \
@@ -145,8 +146,13 @@ class ICCGenerator(object):
             "{profile_date}_{profile_time}"
         self._profile_name = ""
 
+        self.tif_files = []
+
         # The output path is defined by the Operating system
+        import os
         self.output_path = "~/.local/share/icc/"
+        if os.name == 'nt':
+            self.output_path = '%WINDIR%/System32/spool/drivers/color/'
 
     @property
     def printer_brand(self):
@@ -335,8 +341,25 @@ class ICCGenerator(object):
         self._precondition_profile_path = precondition_profile_path
 
     @property
+    def profile_path(self):
+        """getter for the profile_path attribute
+        """
+        # update the output path according to the OS
+        return self._profile_path_template.format(
+            printer_brand=self.printer_brand,
+            printer_model=self.printer_model,
+            paper_brand=self.paper_brand,
+            paper_model=self.paper_model,
+            paper_finish=self.paper_finish,
+            paper_size=self.paper_size,
+            ink_brand=self.ink_brand,
+            profile_date=self.profile_date,
+            profile_time=self.profile_time
+        )
+
+    @property
     def profile_name(self):
-        """getter for the profile name attribute
+        """getter for the profile_name attribute
         """
         if not self._profile_name:
             self.profile_name = self.profile_name_template.format(
@@ -381,11 +404,119 @@ class ICCGenerator(object):
         """
         return self.number_of_pages * 16
 
-    def generate_targets(self):
+    @classmethod
+    def run_external_process(cls, command):
+        """Runs an external process and yields the output
+
+        :param command: The command to run
+        """
+        import subprocess
+        process = subprocess.Popen(
+            command, stderr=subprocess.PIPE
+        )
+        # loop until process finishes and capture stderr output
+        stderr_buffer = []
+        while True:
+            stderr = process.stderr.readline()
+
+            if stderr == b'' and process.poll() is not None:
+                break
+
+            if stderr != b'':
+                stderr = stderr.decode('utf-8').strip()
+                stderr_buffer.append(stderr)
+                yield stderr
+
+        # flatten the buffer
+        stderr_buffer = '\n'.join(stderr_buffer)
+        return_code = process.returncode
+
+        if return_code:
+            # there is an error
+            raise RuntimeError(stderr_buffer)
+
+    def generate_target(self):
+        """generates the required ti1 file
+        """
+        import os
+        profile_path = os.path.expanduser(self.profile_path)
+        profile_full_path = \
+            os.path.expanduser(
+                os.path.join(
+                    self.profile_path, self.profile_name
+                )
+            )
+
+        os.makedirs(profile_path, exist_ok=True)
+
+        # ************************
+        # targen command
+        command = [
+            "targen", "-v", "-d", "2", "-G",
+            "-g", "%s" % self.gray_patch_count,
+            "-f", "%s" % self.patch_count
+        ]
+        if self.precondition_profile_path:
+            command += ["-c", self.precondition_profile_path]
+        command += [profile_full_path]
+
+        # first call the targen command
+        # print("generate_target command: %s" % ' '.join(command))
+        yield from self.run_external_process(command)
+
+    def generate_tif_files(self):
         """generates the required Tiff file or files depending on the page
         count
         """
-        raise NotImplementedError
+        import os
+        profile_path = os.path.expanduser(self.profile_path)
+        profile_full_path = \
+            os.path.expanduser(
+                os.path.join(
+                    self.profile_path, self.profile_name
+                )
+            )
+
+        os.makedirs(profile_path, exist_ok=True)
+
+        # ************************
+        # printtarg command
+        command = ["printtarg", "-v"]
+        if self.use_high_density_mode:
+            command += ['-ii1']  # Use i1 Pro
+        else:
+            command += ['-iCM']  # Use ColorMunki
+
+        command += [
+            "-h", "-R1", "-T300", "-M2", "-L", "-P", "-p", self.paper_size,
+            profile_full_path
+        ]
+
+        # update tif files
+        self.tif_files = []
+        if self.number_of_pages == 1:
+            self.tif_files.append(
+                os.path.expanduser(
+                    os.path.join(
+                        self.profile_path,
+                        "%s.tif" % self.profile_name
+                    )
+                )
+            )
+        else:
+            for i in range(self.number_of_pages):
+                self.tif_files.append(
+                    os.path.expanduser(
+                        os.path.join(
+                            self.profile_path,
+                            "%s_%02i.tif" % (self.profile_name, i + 1)
+                        )
+                    )
+                )
+
+        # first call the targen command
+        # print("generate_tif_files command: %s" % ' '.join(command))
+        yield from self.run_external_process(command)
 
     def print_charts(self):
         """runs the proper application with the charts already open
@@ -400,22 +531,154 @@ class ICCGenerator(object):
         if not will raise a RuntimeError to inform the user, if they exists
         properly it will open GIMP with the Tiff file.
         """
-        raise NotImplementedError
+        import os
+        if os.name == 'nt':  # Windows
+            # call Dry Creek Photo Print Utility first
+            # if it fails then try to call ACPU
+            # if this fails too, raise a RuntimeError
+            pass
+        elif os.name == 'posix':  # Linux
+            # call Gimp with the TIFF Files
+            command = ['/usr/bin/gimp'] + self.tif_files
+            yield from self.run_external_process(command)
 
-    def read_charts(self):
+    def read_charts(self, resume=False, read_mode=0):
+        """Reads the printed chart using the device
+
+        :param bool resume: If a .ti3 files already exists and ``resume`` is
+          set to True. The process will start from where it left before.
+          Default value is False
+
+        :param int read_mode: There are two possible modes:
+
+            0: Strip Mode
+            1: Patch-By-Patch
+
+          Use ``read_mode=1`` (Patch-By-Patch) with ``resume=True`` to fix
+          erroneously read patches.
+
+        :return:
         """
-        """
-        raise NotImplementedError
+        import os
+        profile_path = os.path.expanduser(self.profile_path)
+        profile_full_path = \
+            os.path.expanduser(
+                os.path.join(
+                    self.profile_path, self.profile_name
+                )
+            )
+
+        os.makedirs(profile_path, exist_ok=True)
+
+        # ************************
+        # chartread command
+        command = ["chartread", "-v", "-H", "-T 0.4"]
+        if read_mode == 0:  # Default
+            command += ["-p", "-P"]
+
+        if resume:
+            command += ["-r"]
+
+        command += [profile_full_path]
+
+        # first call the targen command
+        yield from self.run_external_process(command)
 
     def generate_profile(self):
         """
         """
-        raise NotImplementedError
+        import os
+        profile_path = os.path.expanduser(self.profile_path)
+        profile_full_path = \
+            os.path.expanduser(
+                os.path.join(
+                    self.profile_path, self.profile_name
+                )
+            )
+
+        os.makedirs(profile_path, exist_ok=True)
+
+        # ************************
+        # colprof command
+        command = [
+            "colprof", "-v", "-ph", "-r0.5", "-S", "AdobeRGB.icc", "-cmt", "-dpp",
+            "-D%s" % self.profile_name, "-Zr"
+        ]
+
+        if self.copyright_info:
+            command.append("-C%s" % self.copyright_info)
+
+        command += [profile_full_path]
+
+        # call the command
+        yield from self.run_external_process(command)
+
+    def check_profile(self):
+        """Checks the profile quality
+        """
+        import os
+        profile_path = os.path.expanduser(self.profile_path)
+        profile_full_path = \
+            os.path.expanduser(
+                os.path.join(
+                    self.profile_path, self.profile_name
+                )
+            )
+
+        os.makedirs(profile_path, exist_ok=True)
+
+        # ************************
+        # prof_check
+        command = [
+            "profcheck", "-k", "-v2",
+            "%s.ti3" % profile_full_path,
+            "%s.icm" % profile_full_path
+        ]
+
+        # call the command
+        yield from self.run_external_process(command)
 
     def install_profile(self):
+        """Installs the generated profile to appropriate folders depending on the current OS
+
+        For Windows:
+
+            %WINDIR%/System32/spool/drivers/color/
+
+        For Linux:
+
+            ~/.local/share/icc/
+
         """
-        """
-        raise NotImplementedError
+        import os
+        import shutil
+
+        profile_absolute_path = os.path.expanduser(self.profile_path)
+        profile_absolute_full_path = \
+            os.path.expanduser(
+                os.path.join(
+                    self.profile_path, self.profile_name
+                )
+            )
+
+        # check if the profile is not generated yet
+        icc_profile_absolute_full_path = "%s.icc" % profile_absolute_full_path
+        if not os.path.exists(icc_profile_absolute_full_path):
+            raise RuntimeError("ICC file doesn't exist, please generate it first!")
+
+        profile_install_path = os.path.expandvars(
+            os.path.expanduser(
+                os.path.join(
+                    self.output_path,
+                    '%s.icc' % self.profile_name
+                )
+            )
+        )
+
+        shutil.copy2(
+            icc_profile_absolute_full_path,
+            profile_install_path
+        )
 
 
 class UI(object):
