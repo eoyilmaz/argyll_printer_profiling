@@ -93,7 +93,9 @@ class ICCGenerator(object):
 
     def __init__(self, printer_brand="Canon", printer_model="iX6850", paper_brand="Kodak", paper_model="UPPP",
                  paper_finish="Glossy", paper_size=A4, ink_brand="CanonInk", use_high_density_mode=True,
-                 number_of_pages=1, copyright_info="", precondition_profile_path=""):
+                 number_of_pages=1, copyright_info="", precondition_profile_path="", output_commands=False):
+
+        self.output_commands = output_commands
 
         self._printer_brand = None
         self.printer_brand = printer_brand
@@ -478,6 +480,8 @@ class ICCGenerator(object):
 
         # first call the targen command
         # yield from self.run_external_process(command)
+        if self.output_commands:
+            print("command: %s" % " ".join(command))
         for output in self.run_external_process(command):
             print(output)
 
@@ -525,6 +529,8 @@ class ICCGenerator(object):
         # first call the targen command
         # print("generate_tif_files command: %s" % ' '.join(command))
         # yield from self.run_external_process(command)
+        if self.output_commands:
+            print("command: %s" % " ".join(command))
         for output in self.run_external_process(command):
             print(output)
 
@@ -550,6 +556,8 @@ class ICCGenerator(object):
         elif os.name == 'posix':  # Linux
             # call Gimp with the TIFF Files
             command = ['/usr/bin/gimp'] + self.tif_files
+        if self.output_commands:
+            print("command: %s" % " ".join(command))
         for output in self.run_external_process(command):
             print(output)
 
@@ -587,7 +595,8 @@ class ICCGenerator(object):
 
         # os.system(" ".join(command))
         # yield from self.run_external_process(command, shell=True)
-        print('command: %s' % " ".join(command))
+        if self.output_commands:
+            print("command: %s" % " ".join(command))
         for output in self.run_external_process(command, shell=True):
             print(output)
 
@@ -612,6 +621,8 @@ class ICCGenerator(object):
 
         # call the command
         # yield from self.run_external_process(command)
+        if self.output_commands:
+            print("command: %s" % " ".join(command))
         for output in self.run_external_process(command):
             print(output)
 
@@ -640,6 +651,8 @@ class ICCGenerator(object):
 
         # call the command
         # yield from self.run_external_process(command)
+        if self.output_commands:
+            print("command: %s" % " ".join(command))
         for output in self.run_external_process(command):
             print(output)
 
@@ -674,6 +687,51 @@ class ICCGenerator(object):
             icc_profile_absolute_full_path,
             profile_install_path
         )
+
+    @classmethod
+    def color_correct_image(cls, printer_profile="", input_image_path="", output_image_path="", image_profile="AdobeRGB", intent="r"):
+        """Apply color correction to the given image. Accepts TIFF or JPEG files.
+
+        cctiff
+        ~/.local/share/icc/Canon_iX6850_Generic_Plain_Matte_A4_CanonInk_20210207_1402.icc
+        ~/Documents/development/ICCGenerator/sRGB.icc
+        Primary_Colors_3.jpeg
+        Primary_Colors_3_corrected2.jpeg
+
+        cctiff
+          ~/Documents/development/ICCGenerator/sRGB-elle-V2-srgbtrc.icc
+          ~/.local/share/icc/Canon_iX6850_Generic_Plain_Matte_A4_CanonInk_20210207_1402.icc
+          Primary_Colors_3.jpeg
+          Primary_Colors_3_corrected.jpeg
+
+        :param printer_profile:
+        :param str image_profile: can be either sRGB or AdobeRGB
+        :param input_image_path:
+        :param output_image_path:
+        :param intent: Rendering intent:
+
+                p = perceptual, r = relative colorimetric (default)
+                s = saturation, a = absolute colorimetric
+
+        :return:
+        """
+        # ************************
+        # cctiff
+        command = [
+            "cctiff",
+            "-i", intent,
+            "-p",
+            os.path.join(HERE, "%s.icc" % image_profile),
+            printer_profile,
+            input_image_path,
+            output_image_path,
+        ]
+
+        # call the command
+        # yield from self.run_external_process(command)
+        print("command: %s" % " ".join(command))
+        for output in cls.run_external_process(command):
+            print(output)
 
 
 class UI(object):
