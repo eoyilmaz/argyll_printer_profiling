@@ -358,6 +358,24 @@ class ICCGenerator(object):
         )
 
     @property
+    def profile_absolute_path(self):
+        """returns the absolute path of profile_path variable
+        """
+        import os
+        return os.path.expandvars(
+            os.path.expanduser(
+                self.profile_path
+            )
+        )
+
+    @property
+    def profile_absolute_full_path(self):
+        """returns the absolute path of profile_path variable
+        """
+        import os
+        return os.path.join(self.profile_absolute_path, self.profile_name)
+
+    @property
     def profile_name(self):
         """getter for the profile_name attribute
         """
@@ -439,15 +457,7 @@ class ICCGenerator(object):
         """generates the required ti1 file
         """
         import os
-        profile_path = os.path.expanduser(self.profile_path)
-        profile_full_path = \
-            os.path.expanduser(
-                os.path.join(
-                    self.profile_path, self.profile_name
-                )
-            )
-
-        os.makedirs(profile_path, exist_ok=True)
+        os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
         # targen command
@@ -458,7 +468,7 @@ class ICCGenerator(object):
         ]
         if self.precondition_profile_path:
             command += ["-c", self.precondition_profile_path]
-        command += [profile_full_path]
+        command += [self.profile_absolute_full_path]
 
         # first call the targen command
         # print("generate_target command: %s" % ' '.join(command))
@@ -469,15 +479,7 @@ class ICCGenerator(object):
         count
         """
         import os
-        profile_path = os.path.expanduser(self.profile_path)
-        profile_full_path = \
-            os.path.expanduser(
-                os.path.join(
-                    self.profile_path, self.profile_name
-                )
-            )
-
-        os.makedirs(profile_path, exist_ok=True)
+        os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
         # printtarg command
@@ -489,7 +491,7 @@ class ICCGenerator(object):
 
         command += [
             "-h", "-R1", "-T300", "-M2", "-L", "-P", "-p", self.paper_size,
-            profile_full_path
+            self.profile_absolute_full_path
         ]
 
         # update tif files
@@ -536,6 +538,7 @@ class ICCGenerator(object):
             # call Dry Creek Photo Print Utility first
             # if it fails then try to call ACPU
             # if this fails too, raise a RuntimeError
+            # TODO: implement and test this on Windows
             pass
         elif os.name == 'posix':  # Linux
             # call Gimp with the TIFF Files
@@ -560,15 +563,7 @@ class ICCGenerator(object):
         :return:
         """
         import os
-        profile_path = os.path.expanduser(self.profile_path)
-        profile_full_path = \
-            os.path.expanduser(
-                os.path.join(
-                    self.profile_path, self.profile_name
-                )
-            )
-
-        os.makedirs(profile_path, exist_ok=True)
+        os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
         # chartread command
@@ -579,7 +574,7 @@ class ICCGenerator(object):
         if resume:
             command += ["-r"]
 
-        command += [profile_full_path]
+        command += [self.profile_absolute_full_path]
 
         # first call the targen command
         yield from self.run_external_process(command)
@@ -588,15 +583,7 @@ class ICCGenerator(object):
         """
         """
         import os
-        profile_path = os.path.expanduser(self.profile_path)
-        profile_full_path = \
-            os.path.expanduser(
-                os.path.join(
-                    self.profile_path, self.profile_name
-                )
-            )
-
-        os.makedirs(profile_path, exist_ok=True)
+        os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
         # colprof command
@@ -608,7 +595,7 @@ class ICCGenerator(object):
         if self.copyright_info:
             command.append("-C%s" % self.copyright_info)
 
-        command += [profile_full_path]
+        command += [self.profile_absolute_full_path]
 
         # call the command
         yield from self.run_external_process(command)
@@ -617,22 +604,14 @@ class ICCGenerator(object):
         """Checks the profile quality
         """
         import os
-        profile_path = os.path.expanduser(self.profile_path)
-        profile_full_path = \
-            os.path.expanduser(
-                os.path.join(
-                    self.profile_path, self.profile_name
-                )
-            )
-
-        os.makedirs(profile_path, exist_ok=True)
+        os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
         # prof_check
         command = [
             "profcheck", "-k", "-v2",
-            "%s.ti3" % profile_full_path,
-            "%s.icm" % profile_full_path
+            "%s.ti3" % self.profile_absolute_full_path,
+            "%s.icm" % self.profile_absolute_full_path
         ]
 
         # call the command
@@ -652,17 +631,8 @@ class ICCGenerator(object):
         """
         import os
         import shutil
-
-        profile_absolute_path = os.path.expanduser(self.profile_path)
-        profile_absolute_full_path = \
-            os.path.expanduser(
-                os.path.join(
-                    self.profile_path, self.profile_name
-                )
-            )
-
         # check if the profile is not generated yet
-        icc_profile_absolute_full_path = "%s.icc" % profile_absolute_full_path
+        icc_profile_absolute_full_path = "%s.icc" % self.profile_absolute_full_path
         if not os.path.exists(icc_profile_absolute_full_path):
             raise RuntimeError("ICC file doesn't exist, please generate it first!")
 

@@ -1168,6 +1168,85 @@ def test_profile_path_is_read_only():
         icc_gen.profile_path = "some value"
 
 
+def test_profile_absolute_path_is_properly_calculated():
+    """testing if profile_absolute_path is properly calculated
+    """
+    from icc_generator import ICCGenerator
+    import datetime
+    now = datetime.datetime.now()
+    date_str = now.strftime("%Y%m%d")
+    time_str = now.strftime("%H%m")
+    icc_gen = ICCGenerator()
+
+    assert icc_gen.profile_date == date_str
+    assert icc_gen.profile_time == time_str
+    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
+    import os
+    assert icc_gen.profile_absolute_path == os.path.expanduser(profile_path)
+
+
+def test_profile_absolute_path_is_is_read_only():
+    """testing if profile_absolute_path is properly calculated
+    """
+    from icc_generator import ICCGenerator
+    import datetime
+    now = datetime.datetime.now()
+    date_str = now.strftime("%Y%m%d")
+    time_str = now.strftime("%H%m")
+    icc_gen = ICCGenerator()
+
+    assert icc_gen.profile_date == date_str
+    assert icc_gen.profile_time == time_str
+    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
+    import os
+    import pytest
+    with pytest.raises(AttributeError) as cm:
+        icc_gen.profile_absolute_path = os.path.expanduser(profile_path)
+
+    assert str(cm.value) == "can't set attribute"
+
+
+def test_profile_absolute_full_path_is_properly_calculated():
+    """testing if profile_absolute_full_path is properly calculated
+    """
+    from icc_generator import ICCGenerator
+    import datetime
+    now = datetime.datetime.now()
+    date_str = now.strftime("%Y%m%d")
+    time_str = now.strftime("%H%m")
+    icc_gen = ICCGenerator()
+
+    assert icc_gen.profile_date == date_str
+    assert icc_gen.profile_time == time_str
+    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
+    import os
+    assert icc_gen.profile_absolute_full_path == os.path.join(
+        os.path.expandvars(os.path.expanduser(profile_path)),
+        icc_gen.profile_name
+    )
+
+
+def test_profile_absolute_full_path_is_is_read_only():
+    """testing if profile_absolute_full_path is properly calculated
+    """
+    from icc_generator import ICCGenerator
+    import datetime
+    now = datetime.datetime.now()
+    date_str = now.strftime("%Y%m%d")
+    time_str = now.strftime("%H%m")
+    icc_gen = ICCGenerator()
+
+    assert icc_gen.profile_date == date_str
+    assert icc_gen.profile_time == time_str
+    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
+    import os
+    import pytest
+    with pytest.raises(AttributeError) as cm:
+        icc_gen.profile_absolute_full_path = os.path.expanduser(profile_path)
+
+    assert str(cm.value) == "can't set attribute"
+
+
 def test_generate_target_creates_the_output_folder(file_collector):
     """testing if generate_target will create the output folder
     """
