@@ -715,6 +715,18 @@ class ICCGenerator(object):
 
         :return:
         """
+
+        if not output_image_path:
+            # generate the output_image_path from input_image_path
+            base_name = os.path.basename(input_image_path)
+            dir_name = os.path.dirname(input_image_path)
+            base_name_wo_ext, ext = os.path.splitext(input_image_path)
+            i = 1
+            while i < 1000:
+                output_image_path = os.path.join(dir_name, "%s_corrected_%s%s" % (base_name_wo_ext, i, ext))
+                if not os.path.exists(output_image_path):
+                    break
+
         # ************************
         # cctiff
         command = [
