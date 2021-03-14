@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -166,7 +166,6 @@ class ICCGenerator(object):
         if not path or not isinstance(path, str):
             raise TypeError("Please specify a valid path")
 
-        import json
         data = {
             'ink_brand': self.ink_brand,
             'paper_brand': self.paper_brand,
@@ -179,7 +178,12 @@ class ICCGenerator(object):
             'profile_time': self.profile_time
         }
 
-        with open(path, 'w') as f:
+        # create the folder
+        norm_path = os.path.expandvars(os.path.expanduser(path))
+        os.makedirs(os.path.dirname(norm_path), exist_ok=True)
+
+        import json
+        with open(norm_path, 'w+') as f:
             json.dump(data, f)
 
     def load_settings(self, path):
@@ -189,11 +193,12 @@ class ICCGenerator(object):
             raise TypeError("Please specify a valid path")
 
         import os
-        if not os.path.exists(path):
+        norm_path = os.path.expandvars(os.path.expanduser(path))
+        if not os.path.exists(norm_path):
             raise RuntimeError("File does not exist!: %s" % path)
 
         import json
-        with open(path, 'r') as f:
+        with open(norm_path, 'r') as f:
             data = json.load(f)
 
         self.ink_brand = data['ink_brand']
@@ -556,6 +561,19 @@ class ICCGenerator(object):
             self.profile_absolute_full_path
         ]
 
+        self.update_tif_files()
+
+        # first call the targen command
+        # print("generate_tif_files command: %s" % ' '.join(command))
+        # yield from self.run_external_process(command)
+        if self.output_commands:
+            print("command: %s" % " ".join(command))
+        for output in self.run_external_process(command):
+            print(output)
+
+    def update_tif_files(self):
+        """updates the tiff file paths
+        """
         # update tif files
         self.tif_files = []
         if self.number_of_pages == 1:
@@ -577,14 +595,6 @@ class ICCGenerator(object):
                         )
                     )
                 )
-
-        # first call the targen command
-        # print("generate_tif_files command: %s" % ' '.join(command))
-        # yield from self.run_external_process(command)
-        if self.output_commands:
-            print("command: %s" % " ".join(command))
-        for output in self.run_external_process(command):
-            print(output)
 
     def print_charts(self):
         """runs the proper application with the charts already open
@@ -653,7 +663,7 @@ class ICCGenerator(object):
             print(output)
 
     def generate_profile(self):
-        """
+        """generates the profile
         """
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
