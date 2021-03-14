@@ -5,11 +5,14 @@ that does the ICC Profile creation.
 """
 import os
 import logging
+from PySide2 import QtCore, QtGui, QtWidgets
+
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -156,6 +159,52 @@ class ICCGenerator(object):
         self.output_path = "~/.local/share/icc/"
         if os.name == 'nt':
             self.output_path = '%WINDIR%/System32/spool/drivers/color/'
+
+    def save_settings(self, path):
+        """saves the settings to the given path
+        """
+        if not path or not isinstance(path, str):
+            raise TypeError("Please specify a valid path")
+
+        import json
+        data = {
+            'ink_brand': self.ink_brand,
+            'paper_brand': self.paper_brand,
+            'paper_finish': self.paper_finish,
+            'paper_model': self.paper_model,
+            'paper_size': self.paper_size,
+            'printer_brand': self.printer_brand,
+            'printer_model': self.printer_model,
+            'profile_date': self.profile_date,
+            'profile_time': self.profile_time
+        }
+
+        with open(path, 'w') as f:
+            json.dump(data, f)
+
+    def load_settings(self, path):
+        """loads the settings from the given path
+        """
+        if not path or not isinstance(path, str):
+            raise TypeError("Please specify a valid path")
+
+        import os
+        if not os.path.exists(path):
+            raise RuntimeError("File does not exist!: %s" % path)
+
+        import json
+        with open(path, 'r') as f:
+            data = json.load(f)
+
+        self.ink_brand = data['ink_brand']
+        self.paper_brand = data['paper_brand']
+        self.paper_finish = data['paper_finish']
+        self.paper_model = data['paper_model']
+        self.paper_size = data['paper_size']
+        self.printer_brand = data['printer_brand']
+        self.printer_model = data['printer_model']
+        self.profile_date = data['profile_date']
+        self.profile_time = data['profile_time']
 
     @property
     def printer_brand(self):
@@ -376,22 +425,25 @@ class ICCGenerator(object):
         """
         return os.path.join(self.profile_absolute_path, self.profile_name)
 
+    def render_profile_name(self):
+        return self.profile_name_template.format(
+            printer_brand=self.printer_brand,
+            printer_model=self.printer_model,
+            paper_brand=self.paper_brand,
+            paper_model=self.paper_model,
+            paper_finish=self.paper_finish,
+            paper_size=self.paper_size,
+            ink_brand=self.ink_brand,
+            profile_date=self.profile_date,
+            profile_time=self.profile_time
+        )
+
     @property
     def profile_name(self):
         """getter for the profile_name attribute
         """
         if not self._profile_name:
-            self.profile_name = self.profile_name_template.format(
-                printer_brand=self.printer_brand,
-                printer_model=self.printer_model,
-                paper_brand=self.paper_brand,
-                paper_model=self.paper_model,
-                paper_finish=self.paper_finish,
-                paper_size=self.paper_size,
-                ink_brand=self.ink_brand,
-                profile_date=self.profile_date,
-                profile_time=self.profile_time
-            )
+            self.profile_name = self.render_profile_name()
         return self._profile_name
 
     @profile_name.setter
@@ -648,7 +700,6 @@ class ICCGenerator(object):
             # OSX and Linux uses *.icc file extension
             command.append("%s.icc" % self.profile_absolute_full_path)
 
-
         # call the command
         # yield from self.run_external_process(command)
         if self.output_commands:
@@ -689,7 +740,7 @@ class ICCGenerator(object):
         )
 
     @classmethod
-    def color_correct_image(cls, printer_profile="", input_image_path="", output_image_path="", image_profile="AdobeRGB", intent="r"):
+    def color_correct_image(cls, printer_profile_path=None, input_image_path=None, output_image_path=None, image_profile="AdobeRGB", intent="r"):
         """Apply color correction to the given image. Accepts TIFF or JPEG files.
 
         cctiff
@@ -704,17 +755,40 @@ class ICCGenerator(object):
           Primary_Colors_3.jpeg
           Primary_Colors_3_corrected.jpeg
 
-        :param printer_profile:
-        :param str image_profile: can be either sRGB or AdobeRGB
-        :param input_image_path:
-        :param output_image_path:
-        :param intent: Rendering intent:
+        :param str printer_profile_path: The path of the ICC/ICM file of the printer profile.
+        :param str image_profile: Can be either "sRGB" or "AdobeRGB", default is "AdobeRGB".
+        :param str input_image_path: The input JPG/TIFF image path.
+        :param str output_image_path: The output TIFF image path.
+        :param str intent: Rendering intent, one of the following:
 
-                p = perceptual, r = relative colorimetric (default)
-                s = saturation, a = absolute colorimetric
+          p = perceptual, r = relative colorimetric (default)
+          s = saturation, a = absolute colorimetric
 
         :return:
         """
+        # ---------------------
+        # Printer Profile Path
+        if printer_profile_path is None or not isinstance(printer_profile_path, str):
+            raise TypeError("Please specify a proper printer_profile_path!")
+
+        if not os.path.exists(os.path.expandvars(os.path.expanduser(printer_profile_path))):
+            raise ValueError("printer_profile_path doesn't exists: %s" % printer_profile_path)
+
+        printer_profile_extension = os.path.splitext(printer_profile_path)[-1]
+        if printer_profile_extension.lower() not in ['.icc', '.icm']:
+            raise ValueError("printer_profile_path should be a valid ICC/ICM file: %s" % printer_profile_path)
+
+        # ---------------------
+        # Input Image Path
+        if not isinstance(input_image_path, str):
+            raise TypeError("Please specify a proper input_image_path!")
+
+        if not os.path.exists(os.path.expandvars(os.path.expanduser(input_image_path))):
+            raise ValueError("input_image_path doesn't exists: %s" % input_image_path)
+
+        input_image_extension = os.path.splitext(input_image_path)[-1]
+        if input_image_extension.lower() not in ['.jpg', '.tif', '.tiff']:
+            raise ValueError("input_image_path should be a valid JPG/TIF file: %s" % input_image_path)
 
         if not output_image_path:
             # generate the output_image_path from input_image_path
@@ -722,10 +796,36 @@ class ICCGenerator(object):
             dir_name = os.path.dirname(input_image_path)
             base_name_wo_ext, ext = os.path.splitext(input_image_path)
             i = 1
-            while i < 1000:
+            while i < 100000:
                 output_image_path = os.path.join(dir_name, "%s_corrected_%s%s" % (base_name_wo_ext, i, ext))
                 if not os.path.exists(output_image_path):
                     break
+
+        if os.path.splitext(output_image_path)[-1].lower() not in ['.jpg', '.tif', '.tiff']:
+            raise ValueError("output_image_path should be a valid JPG/TIF file: %s" % output_image_path)
+
+        # ---------------------
+        # Intent
+        if not intent:
+            # use default
+            intent = "r"
+
+        if not isinstance(intent, str):
+            raise TypeError("intent should be a string, not %s" % intent.__class__.__name__)
+
+        if intent not in ["p", "r", "s", "a"]:
+            raise ValueError("intent should be one of p, r, s, a, not %s" % intent)
+
+        # ---------------------
+        # Image Profile
+        if image_profile is None:
+            image_profile = "AdobeRGB"
+
+        if not isinstance(image_profile, str):
+            raise TypeError("image_profile should be one of sRGB or AdobeRGB, not %s" % image_profile)
+
+        if image_profile not in ["AdobeRGB", "sRGB"]:
+            raise ValueError("image_profile should be one of sRGB or AdobeRGB, not %s" % image_profile)
 
         # ************************
         # cctiff
@@ -734,7 +834,7 @@ class ICCGenerator(object):
             "-i", intent,
             "-p",
             os.path.join(HERE, "%s.icc" % image_profile),
-            printer_profile,
+            printer_profile_path,
             input_image_path,
             output_image_path,
         ]
@@ -742,7 +842,7 @@ class ICCGenerator(object):
         # call the command
         # yield from self.run_external_process(command)
         print("command: %s" % " ".join(command))
-        for output in cls.run_external_process(command):
+        for output in cls.run_external_process(cls, command):
             print(output)
 
 
@@ -750,3 +850,72 @@ class UI(object):
     """The UI
     """
     pass
+
+
+class MainWindow(QtWidgets.QMainWindow):
+    """
+    """
+
+    __company_name__ = 'Erkan Ozgur Yilmaz'
+    __app_name__ = 'ICC Generator'
+    __version__ = __version__
+
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent=parent)
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.setWindowTitle("%s v%s" % (self.__app_name__, self.__version__))
+
+        self.create_main_menu()
+        self.create_toolbars()
+        self.create_dock_widgets()
+
+        self.read_settings()
+
+    def write_settings(self):
+        """stores the settings to persistent storage
+        """
+        self.settings.beginGroup("MainWindow")
+
+        self.settings.setValue("size", self.size())
+        self.settings.setValue("pos", self.pos())
+        self.settings.setValue("windowState", self.saveState())
+
+        self.settings.endGroup()
+
+    def read_settings(self):
+        """read settings from persistent storage
+        """
+        self.settings.beginGroup('MainWindow')
+
+        self.resize(self.settings.value('size', QtCore.QSize(800, 600)))
+        self.move(self.settings.value('pos', QtCore.QPoint(100, 100)))
+        self.restoreState(self.settings.value('windowState'))
+
+        self.settings.endGroup()
+
+    def reset_window_state(self):
+        """reset window states
+        """
+        self.project_dock_widget.setVisible(True)
+
+    def create_main_menu(self):
+        """creates the main application menu
+        """
+        file_menu = self.menuBar().addMenu(self.tr(b"&File"))
+
+        file_menu.addSeparator()
+
+    def create_toolbars(self):
+        """creates the toolbars
+        """
+        file_toolbar = self.addToolBar(self.tr(b"File"))
+        file_toolbar.setObjectName('file_toolbar')
+        create_project_action = file_toolbar.addAction('Create Project')
+
+    def create_dock_widgets(self):
+        """creates the dock widgets
+        """
+        pass
+

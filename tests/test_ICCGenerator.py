@@ -926,7 +926,7 @@ def test_initializing_non_default_values():
     import datetime
     now = datetime.datetime.now()
     date_str = now.strftime("%Y%m%d")
-    time_str = now.strftime("%H%m")
+    time_str = now.strftime("%H%M")
     icc_gen = ICCGenerator()
 
     assert icc_gen.profile_date == date_str
@@ -1106,7 +1106,7 @@ def test_profile_name_default_value_is_properly_calculated():
     import datetime
     now = datetime.datetime.now()
     date_str = now.strftime("%Y%m%d")
-    time_str = now.strftime("%H%m")
+    time_str = now.strftime("%H%M")
     icc_gen = ICCGenerator()
 
     assert icc_gen.profile_date == date_str
@@ -1147,7 +1147,7 @@ def test_profile_path_default_value_is_properly_calculated():
     import datetime
     now = datetime.datetime.now()
     date_str = now.strftime("%Y%m%d")
-    time_str = now.strftime("%H%m")
+    time_str = now.strftime("%H%M")
     icc_gen = ICCGenerator()
 
     assert icc_gen.profile_date == date_str
@@ -1175,7 +1175,7 @@ def test_profile_absolute_path_is_properly_calculated():
     import datetime
     now = datetime.datetime.now()
     date_str = now.strftime("%Y%m%d")
-    time_str = now.strftime("%H%m")
+    time_str = now.strftime("%H%M")
     icc_gen = ICCGenerator()
 
     assert icc_gen.profile_date == date_str
@@ -1192,7 +1192,7 @@ def test_profile_absolute_path_is_is_read_only():
     import datetime
     now = datetime.datetime.now()
     date_str = now.strftime("%Y%m%d")
-    time_str = now.strftime("%H%m")
+    time_str = now.strftime("%H%M")
     icc_gen = ICCGenerator()
 
     assert icc_gen.profile_date == date_str
@@ -1213,7 +1213,7 @@ def test_profile_absolute_full_path_is_properly_calculated():
     import datetime
     now = datetime.datetime.now()
     date_str = now.strftime("%Y%m%d")
-    time_str = now.strftime("%H%m")
+    time_str = now.strftime("%H%M")
     icc_gen = ICCGenerator()
 
     assert icc_gen.profile_date == date_str
@@ -1233,7 +1233,7 @@ def test_profile_absolute_full_path_is_is_read_only():
     import datetime
     now = datetime.datetime.now()
     date_str = now.strftime("%Y%m%d")
-    time_str = now.strftime("%H%m")
+    time_str = now.strftime("%H%M")
     icc_gen = ICCGenerator()
 
     assert icc_gen.profile_date == date_str
@@ -1290,22 +1290,6 @@ def test_generate_target_generates_ti_file(file_collector):
         )
     )
     assert os.path.exists(expected_path)
-
-
-def test_generate_target_yields_command_line_results(file_collector):
-    """testing if generate_target will yield the command line result
-    """
-    from icc_generator import ICCGenerator
-    icc_gen = ICCGenerator()
-
-    # There should be files under the temp folder
-    # check them
-    # set it to use only one A4 page
-    icc_gen.number_of_pages = 1
-    icc_gen.paper_size = icc_gen.A4
-    file_collector.append(icc_gen.profile_path)
-    for output in icc_gen.generate_target():
-        assert isinstance(output, str)
 
 
 def test_generate_tif_files_will_generate_tif_files_from_target_file(file_collector):
@@ -1646,7 +1630,7 @@ def test_generate_profile_1(file_collector, patch_run_external_process):
     assert 'colprof' in final_command[0]
 
     assert any(['-v' in arg for arg in final_command])
-    assert any(['-ph' in arg for arg in final_command])
+    assert any(['-qh' in arg for arg in final_command])
     assert any(['-r0.5' in arg for arg in final_command])
     assert any(['-S' in arg for arg in final_command])
     assert any(['-cmt' in arg for arg in final_command])
@@ -1770,7 +1754,7 @@ def test_install_profile_1(file_collector, patch_run_external_process):
         )
     )
     os.makedirs(os.path.expandvars(os.path.expanduser(icc_gen.profile_path)), exist_ok=True)
-    assert os.path.exists(icc_gen.profile_path)
+    assert os.path.expandvars(os.path.expanduser(icc_gen.profile_path))
     with open(dummy_icc_profile_full_path, "w+") as f:
         f.write("dummy icc file!!!")
     assert os.path.exists(dummy_icc_profile_full_path)
@@ -1803,7 +1787,6 @@ def test_install_profile_1(file_collector, patch_run_external_process):
 def test_install_profile_2(file_collector, patch_run_external_process):
     """testing if the install_profile will raise a RuntimeError if the ICC has not been generated yet
     """
-    import os
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
     file_collector.append(icc_gen.profile_path)
@@ -1837,7 +1820,6 @@ def test_default_log_level_is_warning(file_collector):
 def test_output_path_for_windows(set_to_windows):
     """testing if the output_path variable is correctly set for Windows
     """
-    import os
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
     assert icc_gen.output_path == '%WINDIR%/System32/spool/drivers/color/'
@@ -1849,3 +1831,664 @@ def test_output_path_for_linux(set_to_linux):
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
     assert icc_gen.output_path == '~/.local/share/icc/'
+
+
+def test_color_correct_image_printer_profile_path_is_skipped(file_collector, patch_run_external_process):
+    """testing if the color_correct_image method will raise a ValueError if the printer_profile_path argument is skipped
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+    with pytest.raises(TypeError) as cm:
+        ICCGenerator.color_correct_image(
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == 'Please specify a proper printer_profile_path!'
+
+
+def test_color_correct_image_printer_profile_path_is_none(file_collector, patch_run_external_process):
+    """testing if the color_correct_image method will raise a TypeError when the printer_profile_path argument is None
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+    with pytest.raises(TypeError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=None,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == 'Please specify a proper printer_profile_path!'
+
+
+def test_color_correct_image_printer_profile_path_doesnt_exist(file_collector, patch_run_external_process):
+    """testing if the color_correct_image method will raise a ValueError when the path shown with printer_profile_path
+    argument value doesn't exist
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path = tempfile.mktemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+    with pytest.raises(ValueError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == "printer_profile_path doesn't exists: %s" % printer_profile_path
+
+
+def test_color_correct_image_printer_profile_path_is_not_an_icc_or_icm_file(file_collector, patch_run_external_process):
+    """testing if a ValueError will be raised when the printer_profile_path argument value is not to a path to an ICC or
+    ICM file
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.not_an_icc_file')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+    with pytest.raises(ValueError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == "printer_profile_path should be a valid ICC/ICM file: %s" % printer_profile_path
+
+
+def test_color_correct_image_input_image_path_is_skipped(file_collector, patch_run_external_process):
+    """testing if the color_correct_image method will raise a ValueError if the input_image_path argument is skipped
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+    with pytest.raises(TypeError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == 'Please specify a proper input_image_path!'
+
+
+def test_color_correct_image_input_image_is_none(file_collector, patch_run_external_process):
+    """testing if the color_correct_image method will raise a TypeError when the input_image argument is None
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+    with pytest.raises(TypeError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=None,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == 'Please specify a proper input_image_path!'
+
+
+def test_color_correct_image_input_image_doesnt_exist(file_collector, patch_run_external_process):
+    """testing if the color_correct_image method will raise a ValueError when the path shown with input_image
+    argument value doesn't exist
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path = tempfile.mktemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+    with pytest.raises(ValueError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == "input_image_path doesn't exists: %s" % input_image_path
+
+
+def test_color_correct_image_input_image_path_is_not_an_jpg_or_tif_file(file_collector, patch_run_external_process):
+    """testing if a TypeError will be raised when the input_image_path argument value is not to a path to a JPG or TIF
+    file
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.bmp')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+    with pytest.raises(ValueError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == "input_image_path should be a valid JPG/TIF file: %s" % input_image_path
+
+
+def test_color_correct_image_output_image_path_is_skipped(file_collector, patch_run_external_process):
+    """testing if a proper output_image_path will be generated when the output_image_path argument is skipped
+    """
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+
+    ICCGenerator.color_correct_image(
+        printer_profile_path=printer_profile_path,
+        input_image_path=input_image_path,
+        image_profile=image_profile,
+        intent=intent
+    )
+
+    import os
+    input_image_name, input_image_ext = os.path.splitext(input_image_path)
+    expected_path = "%s_corrected_1%s" % (input_image_name, input_image_ext)
+    assert any(expected_path in arg for arg in patch_run_external_process[0])
+
+
+def test_color_correct_image_output_image_path_is_none(file_collector, patch_run_external_process):
+    """testing if a proper output_image_path will be generated when the output_image_path argument is None
+    """
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+
+    ICCGenerator.color_correct_image(
+        printer_profile_path=printer_profile_path,
+        input_image_path=input_image_path,
+        image_profile=image_profile,
+        intent=intent
+    )
+
+    import os
+    input_image_name, input_image_ext = os.path.splitext(input_image_path)
+    expected_path = "%s_corrected_1%s" % (input_image_name, input_image_ext)
+    assert any(expected_path in arg for arg in patch_run_external_process[0])
+
+
+def test_color_correct_image_output_image_path_is_not_a_tif_file(file_collector, patch_run_external_process):
+    """testing if a ValueError will be raised when the output_image_path is not a tif file path
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.bmp')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+
+    with pytest.raises(ValueError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == 'output_image_path should be a valid JPG/TIF file: %s' % output_image_path
+
+
+def test_color_correct_image_intent_is_skipped(file_collector, patch_run_external_process):
+    """testing if the default value will be used when the intent argument is skipped
+    """
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+
+    ICCGenerator.color_correct_image(
+        printer_profile_path=printer_profile_path,
+        input_image_path=input_image_path,
+        output_image_path=output_image_path,
+        image_profile=image_profile,
+    )
+
+    assert "-i" in patch_run_external_process[0]
+    assert "r" in patch_run_external_process[0]
+
+
+def test_color_correct_image_intent_is_none(file_collector, patch_run_external_process):
+    """testing if the default value will be used when the intent argument is None
+    """
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+
+    ICCGenerator.color_correct_image(
+        printer_profile_path=printer_profile_path,
+        input_image_path=input_image_path,
+        output_image_path=output_image_path,
+        image_profile=image_profile,
+        intent=None
+    )
+
+    assert "-i" in patch_run_external_process[0]
+    assert "r" in patch_run_external_process[0]
+
+
+def test_color_correct_image_intent_is_not_a_string(file_collector, patch_run_external_process):
+    """testing if a TypeError will be raised when the intent argument is not a string
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = 123
+
+    with pytest.raises(TypeError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == "intent should be a string, not int"
+
+
+def test_color_correct_image_intent_is_not_correct_enum_value(file_collector, patch_run_external_process):
+    """testing if a TypeError will be raised when the intent argument is not one of p, r, s, a
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "not one of the desired values"
+
+    with pytest.raises(ValueError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == "intent should be one of p, r, s, a, not %s" % intent
+
+
+def test_color_correct_image_intent_is_working_properly(file_collector, patch_run_external_process):
+    """testing if the default value will be used when the intent argument is None
+    """
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+
+    ICCGenerator.color_correct_image(
+        printer_profile_path=printer_profile_path,
+        input_image_path=input_image_path,
+        output_image_path=output_image_path,
+        image_profile=image_profile,
+        intent=intent
+    )
+
+    assert "-i" in patch_run_external_process[0]
+    assert "r" in patch_run_external_process[0]
+
+
+def test_color_correct_image_profile_is_none(file_collector, patch_run_external_process):
+    """testing if the default value will be used when the image_profile argument is None
+    """
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "AdobeRGB"
+    intent = "r"
+
+    ICCGenerator.color_correct_image(
+        printer_profile_path=printer_profile_path,
+        input_image_path=input_image_path,
+        output_image_path=output_image_path,
+        image_profile=None,
+        intent=intent
+    )
+
+    assert "-p" in patch_run_external_process[0]
+    assert any(["AdobeRGB" in arg for arg in patch_run_external_process[0]])
+
+
+def test_color_correct_image_image_profile_is_not_a_string(file_collector, patch_run_external_process):
+    """testing if a TypeError will be raised when the image_profile argument is not a string
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = 123123
+    intent = "r"
+
+    with pytest.raises(TypeError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == "image_profile should be one of sRGB or AdobeRGB, not 123123"
+
+
+def test_color_correct_image_image_profile_is_not_correct_enum_value(file_collector, patch_run_external_process):
+    """testing if a TypeError will be raised when the image_profile argument is not one of AdobeRGB or sRGB
+    """
+    import pytest
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "not one of the desired values"
+    intent = "r"
+
+    with pytest.raises(ValueError) as cm:
+        ICCGenerator.color_correct_image(
+            printer_profile_path=printer_profile_path,
+            input_image_path=input_image_path,
+            output_image_path=output_image_path,
+            image_profile=image_profile,
+            intent=intent
+        )
+
+    assert str(cm.value) == "image_profile should be one of sRGB or AdobeRGB, not %s" % image_profile
+
+
+def test_color_correct_image_image_profile_is_working_properly(file_collector, patch_run_external_process):
+    """testing if a TypeError will be raised when the image_profile argument is working properly
+    """
+    import tempfile
+    from icc_generator import ICCGenerator
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+    image_profile = "sRGB"
+    intent = "r"
+
+    ICCGenerator.color_correct_image(
+        printer_profile_path=printer_profile_path,
+        input_image_path=input_image_path,
+        output_image_path=output_image_path,
+        image_profile=image_profile,
+        intent=intent
+    )
+
+    print("patch_run_external_process[0]: %s" % patch_run_external_process[0])
+    assert any("-p" in arg for arg in patch_run_external_process[0])
+    assert any("sRGB" in arg for arg in patch_run_external_process[0])
+
+
+def test_save_settings_path_is_skipped():
+    """testing if a RuntimeError will be raised when the path argument is skipped
+    """
+    import pytest
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.save_settings()
+
+    assert str(cm.value) == "save_settings() missing 1 required positional argument: 'path'"
+
+
+def test_save_settings_path_is_none():
+    """testing if a RuntimeError will be raised when the path argument value is None
+    """
+    import pytest
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.save_settings(None)
+
+    assert str(cm.value) == 'Please specify a valid path'
+
+
+def test_save_settings_path_is_not_a_string():
+    """testing if a TypeError will be raised when the path argument value is not a string
+    """
+    import pytest
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.save_settings(1)
+
+    assert str(cm.value) == 'Please specify a valid path'
+
+
+def test_save_settings_is_working_properly(file_collector, patch_run_external_process):
+    """testing if the save_settings function is working properly
+    """
+    from icc_generator import ICCGenerator
+    import tempfile
+    icc_gen = ICCGenerator()
+    path = tempfile.mktemp()
+    file_collector.append(path)
+    icc_gen.save_settings(path)
+
+    import os
+    assert os.path.exists(path)
+
+    # check file content
+    import json
+    with open(path, "r") as f:
+        data = json.load(f)
+
+    assert data is not None
+    icc_gen.ink_brand = data["ink_brand"]
+    icc_gen.paper_brand = data["paper_brand"]
+    icc_gen.paper_finish = data["paper_finish"]
+    icc_gen.paper_model = data["paper_model"]
+    icc_gen.paper_size = data["paper_size"]
+    icc_gen.printer_brand = data["printer_brand"]
+    icc_gen.printer_model = data["printer_model"]
+    icc_gen.profile_date = data["profile_date"]
+    icc_gen.profile_time = data["profile_time"]
+
+
+def test_load_settings_path_is_skipped():
+    """testing if a RuntimeError will be raised when the path argument is skipped
+    """
+    import pytest
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.load_settings()
+
+    assert str(cm.value) == "load_settings() missing 1 required positional argument: 'path'"
+
+
+def test_load_settings_path_is_none():
+    """testing if a RuntimeError will be raised when the path argument value is None
+    """
+    import pytest
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.load_settings(None)
+
+    assert str(cm.value) == 'Please specify a valid path'
+
+
+def test_load_settings_path_is_not_a_string():
+    """testing if a TypeError will be raised when the path argument value is not a string
+    """
+    import pytest
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.load_settings(123)
+
+    assert str(cm.value) == 'Please specify a valid path'
+
+
+def test_load_settings_path_does_not_exist():
+    """testing if a RuntimeError will be raised when the path doesn't exist
+    """
+    import pytest
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    with pytest.raises(RuntimeError) as cm:
+        icc_gen.load_settings("Some random error")
+
+    assert str(cm.value) == "File does not exist!: Some random error"
+
+
+def test_load_settings_is_working_properly(file_collector):
+    """testing if the load_settings function is working properly
+    """
+    from icc_generator import ICCGenerator
+    import tempfile
+    icc_gen = ICCGenerator()
+
+    # set some values
+    icc_gen.ink_brand = 'Epson673'
+    icc_gen.paper_brand = 'Agfa'
+    icc_gen.paper_finish = 'Glossy'
+    icc_gen.paper_model = 'HGPIP'
+    icc_gen.paper_size = 'A4'
+    icc_gen.printer_brand = 'Epson'
+    icc_gen.printer_model = 'L800'
+
+    path = tempfile.mktemp()
+    file_collector.append(path)
+    icc_gen.save_settings(path)
+
+    import os
+    assert os.path.exists(path)
+
+    # check file content
+    icc_gen2 = ICCGenerator()
+    icc_gen2.load_settings(path)
+
+    icc_gen.ink_brand = icc_gen2.ink_brand
+    icc_gen.paper_brand = icc_gen2.paper_brand
+    icc_gen.paper_finish = icc_gen2.paper_finish
+    icc_gen.paper_model = icc_gen2.paper_model
+    icc_gen.paper_size = icc_gen2.paper_size
+    icc_gen.printer_brand = icc_gen2.printer_brand
+    icc_gen.printer_model = icc_gen2.printer_model
+    icc_gen.profile_date = icc_gen2.profile_date
+    icc_gen.profile_time = icc_gen2.profile_time

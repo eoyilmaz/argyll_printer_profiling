@@ -31,7 +31,10 @@ def file_collector():
                     for d in glob.glob('%s/*' % f):
                         # print("%s" % d)
                         os.remove(d)
-                    os.removedirs(f)
+                    try:
+                        os.removedirs(f)
+                    except OSError:
+                        pass
             elif os.path.isfile(f):
                 os.remove(f)
     logger.debug("End of collected file paths")
