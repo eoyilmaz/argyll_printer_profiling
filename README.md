@@ -1,7 +1,7 @@
-# ArgyllCMS Printer Profiling Commands (with X-Rite ColorMunki Photo) #
+# ArgyllCMS Printer Profiling Commands (with X-Rite ColorMunki Photo or X-Rite i1Pro 2) #
 
 This is a set of commands to create Inkjet Printer Profiles with Argyll CMS and
-X-Rite ColorMunki Photo.
+X-Rite ColorMunki Photo and X-Rite i1Pro 2.
 
 The commands are based on [Andres Torger's tutorial](https://www.ludd.ltu.se/~torger/photography/argyll-print.html).
 Which is a great read if you want to do a quick entry to ArgyllCMS.
@@ -51,8 +51,46 @@ profile to your system. And that's it. You can then use that
 profile to print from applications like Photoshop, Lightroom, CaptureOne, Gimp
 etc.
 
-The system is setup to use 600 color patches per A4 or 1260 color patches per
-A3 size paper in ``high density mode`` and 210 color patches per A4 and 460
+The system is setup to use 600 color patches per A4 or 1212 color patches per
+A3 size paper in ``high density mode`` and 210 color patches per A4 and 445
 color patches per A3. The high density mode is the default behaviour. But it
 may be tedious to scan through. If that's the case, simply don't use
 high density mode and print more pages.
+
+### Python Documentation ###
+
+The system is now a Python library. You do not need to use the command line
+tools.
+
+```python
+from icc_generator import ICCGenerator
+ig = ICCGenerator()
+
+# Set Printer Details
+ig.printer_brand = "Canon"
+ig.printer_model = "iX6850"
+
+# Set Paper Details
+ig.paper_brand = "Kodak"
+ig.paper_model = "UPPP"
+ig.paper_finish = "Glossy"
+ig.paper_size = "A4"
+
+# Set Ink Details
+ig.ink_brand = "CanonInk"
+
+# Profiling workflow
+ig.generate_target()
+ig.generate_tif_files()
+ig.read_charts()
+ig.generate_profile()
+ig.check_profile(True)
+# Optionally you can re-read erroneous patches
+# use read_mode=1 for patch-by-patch
+ig.read_charts(resume=True, read_mode=0)
+
+# install the profile to the correct location for your system
+ig.install_profile()
+```
+
+Next, there will be a Qt UI in the near future.

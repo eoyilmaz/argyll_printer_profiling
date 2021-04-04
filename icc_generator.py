@@ -29,7 +29,7 @@ ig.read_charts()
 ig.generate_profile()
 ig.check_profile(True)
 # Optional
-ig.read_charts(resume=True, mode=0) # use mode=1 for patch-by-patch
+ig.read_charts(resume=True, read_mode=0) # use mode=1 for patch-by-patch
 ig.install_profile()
 """
 import os
