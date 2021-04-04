@@ -2,6 +2,35 @@
 # -*- coding: utf-8 -*-
 """This is the advanced GUI version of the Windows Command Line script
 that does the ICC Profile creation.
+
+Workflow:
+
+from icc_generator import ICCGenerator
+ig = ICCGenerator()
+
+# Set Printer Details
+ig.printer_brand
+ig.printer_model
+
+# Set Paper Details
+ig.paper_brand
+ig.paper_model
+ig.paper_finish
+ig.paper_size
+
+# Set Ink Details
+ig.ink_brand
+
+# Profiling workflow
+
+ig.generate_target()
+ig.generate_tif_files()
+ig.read_charts()
+ig.generate_profile()
+ig.check_profile(True)
+# Optional
+ig.read_charts(resume=True, mode=0) # use mode=1 for patch-by-patch
+ig.install_profile()
 """
 import os
 import logging
