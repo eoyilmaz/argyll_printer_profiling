@@ -967,10 +967,10 @@ def test_per_page_patch_count_is_updated_properly():
     # Set the paper size to A3
     icc_gen.paper_size = icc_gen.A3
     icc_gen.use_high_density_mode = False
-    assert icc_gen.per_page_patch_count == 460
+    assert icc_gen.per_page_patch_count == 445
 
     icc_gen.use_high_density_mode = True
-    assert icc_gen.per_page_patch_count == 1260
+    assert icc_gen.per_page_patch_count == 1212
 
 
 def test_patch_count_is_read_only():
@@ -1061,30 +1061,30 @@ def test_patch_count_is_updating_properly():
 
     # 1 Page
     icc_gen.number_of_pages = 1
-    assert icc_gen.patch_count == 460
+    assert icc_gen.patch_count == 445
 
     # 2 Pages
     icc_gen.number_of_pages = 2
-    assert icc_gen.patch_count == 920
+    assert icc_gen.patch_count == 890
 
     # 3 Pages
     icc_gen.number_of_pages = 3
-    assert icc_gen.patch_count == 1380
+    assert icc_gen.patch_count == 1335
 
     # Use High Density Mode: True
     icc_gen.use_high_density_mode = True
 
     # 1 Page
     icc_gen.number_of_pages = 1
-    assert icc_gen.patch_count == 1260
+    assert icc_gen.patch_count == 1212
 
     # 2 Pages
     icc_gen.number_of_pages = 2
-    assert icc_gen.patch_count == 2520
+    assert icc_gen.patch_count == 2424
 
     # 3 Pages
     icc_gen.number_of_pages = 3
-    assert icc_gen.patch_count == 3780
+    assert icc_gen.patch_count == 3636
 
 
 def test_profile_name_template_default_value():
@@ -2342,28 +2342,34 @@ def test_color_correct_image_image_profile_is_working_properly(file_collector, p
     assert any("sRGB" in arg for arg in patch_run_external_process[0])
 
 
-def test_save_settings_path_is_skipped():
-    """testing if a RuntimeError will be raised when the path argument is skipped
+def test_save_settings_path_is_skipped(file_collector):
+    """testing if the profile_path will be used when the path argument value is skipped
     """
-    import pytest
+    import os
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
-    with pytest.raises(TypeError) as cm:
-        icc_gen.save_settings()
+    settings_file_path = os.path.join(icc_gen.profile_path, "%s.json" % icc_gen.profile_name)
 
-    assert str(cm.value) == "save_settings() missing 1 required positional argument: 'path'"
+    file_collector.append(settings_file_path)
+
+    assert not os.path.exists(os.path.expanduser(settings_file_path))
+    icc_gen.save_settings()
+    assert os.path.exists(os.path.expanduser(settings_file_path))
 
 
-def test_save_settings_path_is_none():
-    """testing if a RuntimeError will be raised when the path argument value is None
+def test_save_settings_path_is_none(file_collector):
+    """testing if the profile_path will be used when the path argument value is None
     """
-    import pytest
+    import os
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
-    with pytest.raises(TypeError) as cm:
-        icc_gen.save_settings(None)
+    settings_file_path = os.path.join(icc_gen.profile_path, "%s.json" % icc_gen.profile_name)
 
-    assert str(cm.value) == 'Please specify a valid path'
+    file_collector.append(settings_file_path)
+
+    assert not os.path.exists(os.path.expanduser(settings_file_path))
+    icc_gen.save_settings(path=None)
+    assert os.path.exists(os.path.expanduser(settings_file_path))
 
 
 def test_save_settings_path_is_not_a_string():

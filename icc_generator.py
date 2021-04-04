@@ -81,8 +81,8 @@ class ICCGenerator(object):
             {
                 A3: {
                     'patch_count': {
-                        NORMAL_DENSITY: 460,
-                        HIGH_DENSITY: 1260,
+                        NORMAL_DENSITY: 445,
+                        HIGH_DENSITY: 1212,
                     }
                 },
                 A4: {
@@ -160,10 +160,16 @@ class ICCGenerator(object):
         if os.name == 'nt':
             self.output_path = '%WINDIR%/System32/spool/drivers/color/'
 
-    def save_settings(self, path):
+    def save_settings(self, path=None):
         """saves the settings to the given path
+
+        :param str path: The settings file path. If skipped the profile path will be used along with the profile name to
+          generate a proper profile path.
         """
-        if not path or not isinstance(path, str):
+        if not path:
+            path = os.path.join(self.profile_path, "%s.json" % self.profile_name)
+
+        if not isinstance(path, str):
             raise TypeError("Please specify a valid path")
 
         data = {
@@ -192,7 +198,6 @@ class ICCGenerator(object):
         if not path or not isinstance(path, str):
             raise TypeError("Please specify a valid path")
 
-        import os
         norm_path = os.path.expandvars(os.path.expanduser(path))
         if not os.path.exists(norm_path):
             raise RuntimeError("File does not exist!: %s" % path)
@@ -552,12 +557,13 @@ class ICCGenerator(object):
         # printtarg command
         command = ["printtarg", "-v"]
         if self.use_high_density_mode:
-            command += ['-ii1']  # Use i1 Pro
+            command += ["-ii1"]  # Use i1 Pro
         else:
-            command += ['-iCM']  # Use ColorMunki
+            command += ["-iCM", "-h"]  # Use ColorMunki
 
         command += [
-            "-h", "-R1", "-T300", "-M2", "-L", "-P", "-p", self.paper_size,
+            "-R1", "-T300", "-M2", "-L", "-P",
+            "-p", "420x297" if self.paper_size == "A3" else self.paper_size,
             self.profile_absolute_full_path
         ]
 
