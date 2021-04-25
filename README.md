@@ -64,6 +64,7 @@ tools.
 
 ```python
 from icc_generator import ICCGenerator
+
 ig = ICCGenerator()
 
 # Set Printer Details
@@ -81,7 +82,7 @@ ig.ink_brand = "CanonInk"
 
 # Profiling workflow
 ig.generate_target()
-ig.generate_tif_files()
+ig.generate_tif()
 ig.read_charts()
 ig.generate_profile()
 ig.check_profile(True)

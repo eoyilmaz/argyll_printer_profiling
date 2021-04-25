@@ -71,8 +71,8 @@ class ICCGenerator(object):
     420 patches for A4 (in 2 A4 pages)
     460 patches for A3
 
-    by setting the device to ``i1pro`` and the margins to 2 mm it is possible to print 600 (25x24) 8x10 mm patches for
-    A4 and 1260 (36x35) 8x10 mm patches for A3 on a single page.
+    by setting the device to ``i1pro`` and the margins to 2 mm it is possible to print 672 (28x24) 7x8.75 mm patches for
+    A4 and 1392 (58x24) 7x8.75 mm patches for A3 on a single page.
 
     what I want to achieve here is to use the minimum amount of paper for
     profiling and still have an excellent result
@@ -111,13 +111,13 @@ class ICCGenerator(object):
                 A3: {
                     'patch_count': {
                         NORMAL_DENSITY: 445,
-                        HIGH_DENSITY: 1212,
+                        HIGH_DENSITY: 1392,
                     }
                 },
                 A4: {
                     'patch_count': {
                         NORMAL_DENSITY: 210,
-                        HIGH_DENSITY: 600,
+                        HIGH_DENSITY: 672,
                     }
                 }
             }
@@ -548,9 +548,6 @@ class ICCGenerator(object):
                 raise RuntimeError(stderr_buffer)
         else:
             command = " ".join(command)
-            # process = subprocess.Popen(
-            #     command, stderr=subprocess.PIPE, shell=shell
-            # )
             os.system(command)
 
     def generate_target(self):
@@ -576,7 +573,7 @@ class ICCGenerator(object):
         for output in self.run_external_process(command):
             print(output)
 
-    def generate_tif_files(self):
+    def generate_tif(self):
         """generates the required Tiff file or files depending on the page
         count
         """
@@ -586,12 +583,12 @@ class ICCGenerator(object):
         # printtarg command
         command = ["printtarg", "-v"]
         if self.use_high_density_mode:
-            command += ["-ii1"]  # Use i1 Pro
+            command += ["-ii1", "-a 0.875"]  # Use an i1 Pro
         else:
-            command += ["-iCM", "-h"]  # Use ColorMunki
+            command += ["-iCM", "-h", "-P"]  # Use a ColorMunki
 
         command += [
-            "-R1", "-T300", "-M2", "-L", "-P",
+            "-R1", "-T300", "-M2", "-L",
             "-p", "420x297" if self.paper_size == "A3" else self.paper_size,
             self.profile_absolute_full_path
         ]
@@ -707,8 +704,8 @@ class ICCGenerator(object):
         command = [
             "colprof", "-v", "-qh", "-r0.5", "-S",
             os.path.join(HERE, "AdobeRGB.icc"),
-            "-cmt", "-dpp",
-            "-D%s" % self.profile_name, "-Zr"
+            "-cmt", "-dpp", "-Zr", "-Zm",
+            "-D%s" % self.profile_name
         ]
 
         if self.copyright_info:
@@ -845,6 +842,7 @@ class ICCGenerator(object):
                 output_image_path = os.path.join(dir_name, "%s_corrected_%s%s" % (base_name_wo_ext, i, ext))
                 if not os.path.exists(output_image_path):
                     break
+                i += 1
 
         if os.path.splitext(output_image_path)[-1].lower() not in ['.jpg', '.tif', '.tiff']:
             raise ValueError("output_image_path should be a valid JPG/TIF file: %s" % output_image_path)
@@ -887,7 +885,7 @@ class ICCGenerator(object):
         # call the command
         # yield from self.run_external_process(command)
         print("command: %s" % " ".join(command))
-        for output in cls.run_external_process(cls, command):
+        for output in cls.run_external_process(command):
             print(output)
 
 

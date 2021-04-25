@@ -962,7 +962,7 @@ def test_per_page_patch_count_is_updated_properly():
     assert icc_gen.per_page_patch_count == 210
 
     icc_gen.use_high_density_mode = True
-    assert icc_gen.per_page_patch_count == 600
+    assert icc_gen.per_page_patch_count == 672
 
     # Set the paper size to A3
     icc_gen.paper_size = icc_gen.A3
@@ -970,7 +970,7 @@ def test_per_page_patch_count_is_updated_properly():
     assert icc_gen.per_page_patch_count == 445
 
     icc_gen.use_high_density_mode = True
-    assert icc_gen.per_page_patch_count == 1212
+    assert icc_gen.per_page_patch_count == 1392
 
 
 def test_patch_count_is_read_only():
@@ -1044,15 +1044,15 @@ def test_patch_count_is_updating_properly():
 
     # 1 Page
     icc_gen.number_of_pages = 1
-    assert icc_gen.patch_count == 600
+    assert icc_gen.patch_count == 672
 
     # 2 Pages
     icc_gen.number_of_pages = 2
-    assert icc_gen.patch_count == 1200
+    assert icc_gen.patch_count == 1344
 
     # 3 Pages
     icc_gen.number_of_pages = 3
-    assert icc_gen.patch_count == 1800
+    assert icc_gen.patch_count == 2016
 
     # Paper Size:A3
     # Use High Density Mode: False
@@ -1076,15 +1076,15 @@ def test_patch_count_is_updating_properly():
 
     # 1 Page
     icc_gen.number_of_pages = 1
-    assert icc_gen.patch_count == 1212
+    assert icc_gen.patch_count == 1392
 
     # 2 Pages
     icc_gen.number_of_pages = 2
-    assert icc_gen.patch_count == 2424
+    assert icc_gen.patch_count == 2784
 
     # 3 Pages
     icc_gen.number_of_pages = 3
-    assert icc_gen.patch_count == 3636
+    assert icc_gen.patch_count == 4176
 
 
 def test_profile_name_template_default_value():
@@ -1305,7 +1305,7 @@ def test_generate_tif_files_will_generate_tif_files_from_target_file(file_collec
     icc_gen.paper_size = icc_gen.A4
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
 
     # import time
     # time.sleep(20)
@@ -1345,7 +1345,7 @@ def test_generate_tif_files_will_generates_correct_amount_of_tif_files(file_coll
     file_collector.append(icc_gen.profile_path)
 
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
 
     import os
     assert os.path.exists(
@@ -1383,7 +1383,7 @@ def test_generate_tif_files_will_fill_tif_files_attribute_single_page(file_colle
     file_collector.append(icc_gen.profile_path)
 
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
 
     import os
     tif1 = os.path.expanduser(
@@ -1412,7 +1412,7 @@ def test_generate_tif_files_will_fill_tif_files_attribute_more_than_one_page(fil
     file_collector.append(icc_gen.profile_path)
 
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
 
     import os
     tif1 = os.path.expanduser(
@@ -1450,7 +1450,7 @@ def test_generate_tif_files_will_clear_the_tif_files_list(file_collector):
     file_collector.append(icc_gen.profile_path)
 
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
 
     import os
     tif1 = os.path.expanduser(
@@ -1475,7 +1475,7 @@ def test_generate_tif_files_will_clear_the_tif_files_list(file_collector):
     file_collector.append(icc_gen.profile_path)
 
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
 
     import os
     tif1 = os.path.expanduser(
@@ -1506,7 +1506,7 @@ def test_generate_tif_files_with_high_density_mode(file_collector, patch_run_ext
     file_collector.append(icc_gen.profile_path)
 
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
     assert any(['-ii1' in arg for arg in final_command])
@@ -1530,7 +1530,7 @@ def test_generate_tif_files_with_normal_density_mode(file_collector, patch_run_e
     file_collector.append(icc_gen.profile_path)
 
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     # check the final call to the run_external_process
     final_command = patch_run_external_process[-1]
     assert any(['-iCM' in arg for arg in final_command])
@@ -1546,7 +1546,7 @@ def test_print_charts(file_collector, patch_run_external_process):
     file_collector.append(icc_gen.profile_path)
 
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
 
     # check the final call to the run_external_process
@@ -1562,7 +1562,7 @@ def test_read_charts_calls_chartread_command(file_collector, patch_run_external_
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
     icc_gen.read_charts()
 
@@ -1580,7 +1580,7 @@ def test_read_charts_with_resume_set_to_True(file_collector, patch_run_external_
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
     icc_gen.read_charts(resume=True)
 
@@ -1600,7 +1600,7 @@ def test_read_charts_with_read_mode_set_to_1(file_collector, patch_run_external_
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
     icc_gen.read_charts(read_mode=1)
 
@@ -1620,7 +1620,7 @@ def test_generate_profile_1(file_collector, patch_run_external_process):
     icc_gen.number_of_pages = 1
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
     icc_gen.read_charts()
     icc_gen.generate_profile()
@@ -1647,7 +1647,7 @@ def test_generate_profile_2(file_collector, patch_run_external_process):
     icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
     icc_gen.read_charts()
     icc_gen.generate_profile()
@@ -1669,7 +1669,7 @@ def test_check_profile(file_collector, patch_run_external_process):
     icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
     icc_gen.read_charts()
     icc_gen.generate_profile()
@@ -1693,7 +1693,7 @@ def test_check_profile_with_sort(file_collector, patch_run_external_process):
     icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
     icc_gen.read_charts()
     icc_gen.generate_profile()
@@ -1718,7 +1718,7 @@ def test_check_profile_with_correct_file_extension(file_collector, patch_run_ext
     icc_gen.copyright_info = "Erkan Ozgur Yilmaz(c)2021"
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    icc_gen.generate_tif_files()
+    icc_gen.generate_tif()
     icc_gen.print_charts()
     icc_gen.read_charts()
     icc_gen.generate_profile()
@@ -2035,7 +2035,7 @@ def test_color_correct_image_input_image_path_is_not_an_jpg_or_tif_file(file_col
     assert str(cm.value) == "input_image_path should be a valid JPG/TIF file: %s" % input_image_path
 
 
-def test_color_correct_image_output_image_path_is_skipped(file_collector, patch_run_external_process):
+def test_color_correct_image_output_image_path_is_skipped(file_collector, patch_run_external_process_class_method_version):
     """testing if a proper output_image_path will be generated when the output_image_path argument is skipped
     """
     import tempfile
@@ -2058,10 +2058,10 @@ def test_color_correct_image_output_image_path_is_skipped(file_collector, patch_
     import os
     input_image_name, input_image_ext = os.path.splitext(input_image_path)
     expected_path = "%s_corrected_1%s" % (input_image_name, input_image_ext)
-    assert any(expected_path in arg for arg in patch_run_external_process[0])
+    assert any(expected_path in arg for arg in patch_run_external_process_class_method_version[0])
 
 
-def test_color_correct_image_output_image_path_is_none(file_collector, patch_run_external_process):
+def test_color_correct_image_output_image_path_is_none(file_collector, patch_run_external_process_class_method_version):
     """testing if a proper output_image_path will be generated when the output_image_path argument is None
     """
     import tempfile
@@ -2084,10 +2084,10 @@ def test_color_correct_image_output_image_path_is_none(file_collector, patch_run
     import os
     input_image_name, input_image_ext = os.path.splitext(input_image_path)
     expected_path = "%s_corrected_1%s" % (input_image_name, input_image_ext)
-    assert any(expected_path in arg for arg in patch_run_external_process[0])
+    assert any(expected_path in arg for arg in patch_run_external_process_class_method_version[0])
 
 
-def test_color_correct_image_output_image_path_is_not_a_tif_file(file_collector, patch_run_external_process):
+def test_color_correct_image_output_image_path_is_not_a_tif_file(file_collector):
     """testing if a ValueError will be raised when the output_image_path is not a tif file path
     """
     import pytest
@@ -2113,7 +2113,7 @@ def test_color_correct_image_output_image_path_is_not_a_tif_file(file_collector,
     assert str(cm.value) == 'output_image_path should be a valid JPG/TIF file: %s' % output_image_path
 
 
-def test_color_correct_image_intent_is_skipped(file_collector, patch_run_external_process):
+def test_color_correct_image_intent_is_skipped(file_collector, patch_run_external_process_class_method_version):
     """testing if the default value will be used when the intent argument is skipped
     """
     import tempfile
@@ -2133,11 +2133,11 @@ def test_color_correct_image_intent_is_skipped(file_collector, patch_run_externa
         image_profile=image_profile,
     )
 
-    assert "-i" in patch_run_external_process[0]
-    assert "r" in patch_run_external_process[0]
+    assert "-i" in patch_run_external_process_class_method_version[0]
+    assert "r" in patch_run_external_process_class_method_version[0]
 
 
-def test_color_correct_image_intent_is_none(file_collector, patch_run_external_process):
+def test_color_correct_image_intent_is_none(file_collector, patch_run_external_process_class_method_version):
     """testing if the default value will be used when the intent argument is None
     """
     import tempfile
@@ -2158,11 +2158,11 @@ def test_color_correct_image_intent_is_none(file_collector, patch_run_external_p
         intent=None
     )
 
-    assert "-i" in patch_run_external_process[0]
-    assert "r" in patch_run_external_process[0]
+    assert "-i" in patch_run_external_process_class_method_version[0]
+    assert "r" in patch_run_external_process_class_method_version[0]
 
 
-def test_color_correct_image_intent_is_not_a_string(file_collector, patch_run_external_process):
+def test_color_correct_image_intent_is_not_a_string(file_collector):
     """testing if a TypeError will be raised when the intent argument is not a string
     """
     import pytest
@@ -2188,7 +2188,7 @@ def test_color_correct_image_intent_is_not_a_string(file_collector, patch_run_ex
     assert str(cm.value) == "intent should be a string, not int"
 
 
-def test_color_correct_image_intent_is_not_correct_enum_value(file_collector, patch_run_external_process):
+def test_color_correct_image_intent_is_not_correct_enum_value(file_collector):
     """testing if a TypeError will be raised when the intent argument is not one of p, r, s, a
     """
     import pytest
@@ -2214,7 +2214,7 @@ def test_color_correct_image_intent_is_not_correct_enum_value(file_collector, pa
     assert str(cm.value) == "intent should be one of p, r, s, a, not %s" % intent
 
 
-def test_color_correct_image_intent_is_working_properly(file_collector, patch_run_external_process):
+def test_color_correct_image_intent_is_working_properly(file_collector, patch_run_external_process_class_method_version):
     """testing if the default value will be used when the intent argument is None
     """
     import tempfile
@@ -2235,11 +2235,11 @@ def test_color_correct_image_intent_is_working_properly(file_collector, patch_ru
         intent=intent
     )
 
-    assert "-i" in patch_run_external_process[0]
-    assert "r" in patch_run_external_process[0]
+    assert "-i" in patch_run_external_process_class_method_version[0]
+    assert "r" in patch_run_external_process_class_method_version[0]
 
 
-def test_color_correct_image_profile_is_none(file_collector, patch_run_external_process):
+def test_color_correct_image_profile_is_none(file_collector, patch_run_external_process_class_method_version):
     """testing if the default value will be used when the image_profile argument is None
     """
     import tempfile
@@ -2260,11 +2260,11 @@ def test_color_correct_image_profile_is_none(file_collector, patch_run_external_
         intent=intent
     )
 
-    assert "-p" in patch_run_external_process[0]
-    assert any(["AdobeRGB" in arg for arg in patch_run_external_process[0]])
+    assert "-p" in patch_run_external_process_class_method_version[0]
+    assert any(["AdobeRGB" in arg for arg in patch_run_external_process_class_method_version[0]])
 
 
-def test_color_correct_image_image_profile_is_not_a_string(file_collector, patch_run_external_process):
+def test_color_correct_image_image_profile_is_not_a_string(file_collector):
     """testing if a TypeError will be raised when the image_profile argument is not a string
     """
     import pytest
@@ -2290,7 +2290,7 @@ def test_color_correct_image_image_profile_is_not_a_string(file_collector, patch
     assert str(cm.value) == "image_profile should be one of sRGB or AdobeRGB, not 123123"
 
 
-def test_color_correct_image_image_profile_is_not_correct_enum_value(file_collector, patch_run_external_process):
+def test_color_correct_image_image_profile_is_not_correct_enum_value(file_collector):
     """testing if a TypeError will be raised when the image_profile argument is not one of AdobeRGB or sRGB
     """
     import pytest
@@ -2316,7 +2316,7 @@ def test_color_correct_image_image_profile_is_not_correct_enum_value(file_collec
     assert str(cm.value) == "image_profile should be one of sRGB or AdobeRGB, not %s" % image_profile
 
 
-def test_color_correct_image_image_profile_is_working_properly(file_collector, patch_run_external_process):
+def test_color_correct_image_image_profile_is_working_properly(file_collector, patch_run_external_process_class_method_version):
     """testing if a TypeError will be raised when the image_profile argument is working properly
     """
     import tempfile
@@ -2337,9 +2337,9 @@ def test_color_correct_image_image_profile_is_working_properly(file_collector, p
         intent=intent
     )
 
-    print("patch_run_external_process[0]: %s" % patch_run_external_process[0])
-    assert any("-p" in arg for arg in patch_run_external_process[0])
-    assert any("sRGB" in arg for arg in patch_run_external_process[0])
+    print("patch_run_external_process[0]: %s" % patch_run_external_process_class_method_version[0])
+    assert any("-p" in arg for arg in patch_run_external_process_class_method_version[0])
+    assert any("sRGB" in arg for arg in patch_run_external_process_class_method_version[0])
 
 
 def test_save_settings_path_is_skipped(file_collector):

@@ -62,6 +62,26 @@ def patch_run_external_process():
 
 
 @pytest.fixture("function")
+def patch_run_external_process_class_method_version():
+    """patches the given function
+    """
+    from icc_generator import ICCGenerator
+    orig_method = ICCGenerator.run_external_process
+
+    commands = []
+
+    def patched_run_external_process(command, shell=False):
+        commands.append(command)
+        yield ''
+
+    ICCGenerator.run_external_process = patched_run_external_process
+
+    yield commands
+
+    ICCGenerator.run_external_process = orig_method
+
+
+@pytest.fixture("function")
 def set_to_windows():
     """patches os.name to nt
     """
