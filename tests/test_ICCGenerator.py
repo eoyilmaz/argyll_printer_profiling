@@ -983,6 +983,90 @@ def test_patch_count_is_read_only():
         icc_gen.patch_count = 120
 
 
+def test_gray_patch_count_argument_is_skipped():
+    """testing if the default value is used when the gray_patch_count argument
+    is skipped
+    """
+    from icc_generator import ICCGenerator
+    icc_gen = ICCGenerator()
+    assert icc_gen.gray_patch_count == 16
+
+
+def test_gray_patch_count_argument_is_none():
+    """testing if gray_patch_count argument is set to None will raise an
+    TypeError
+    """
+    from icc_generator import ICCGenerator
+    import pytest
+    with pytest.raises(TypeError) as cm:
+        icc_gen = ICCGenerator(gray_patch_count=None)
+
+    assert str(cm.value) == "ICCGenerator.gray_patch_count should be an int, " \
+                            "not NoneType"
+
+
+def test_gray_patch_count_attribute_is_set_to_none():
+    """testing if an TypeError will be raised when the gray_patch_count
+    attribute is set to None
+    """
+    from icc_generator import ICCGenerator
+    import pytest
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.gray_patch_count = None
+
+    assert str(cm.value) == "ICCGenerator.gray_patch_count should be an int, " \
+                            "not NoneType"
+
+
+def test_gray_patch_count_argument_is_not_an_int():
+    """testing if a TypeError will be raised if the gray_patch_count argument
+    value is not an int
+    """
+    from icc_generator import ICCGenerator
+    import pytest
+    with pytest.raises(TypeError) as cm:
+        icc_gen = ICCGenerator(gray_patch_count="312")
+
+    assert str(cm.value) == "ICCGenerator.gray_patch_count should be an int, " \
+                            "not str"
+
+
+def test_gray_patch_count_attribute_is_not_set_to_an_int():
+    """testing if a TypeError will be raised when the gray_patch_count
+    attribute is set to a value other than an int
+    """
+    from icc_generator import ICCGenerator
+    import pytest
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.gray_patch_count = "443"
+
+    assert str(cm.value) == "ICCGenerator.gray_patch_count should be an int, " \
+                            "not str"
+
+
+def test_gray_patch_count_argument_is_working_properly():
+    """testing if the gray_patch_count argument value is properly passed to the
+    gray_patch_count attribute
+    """
+    from icc_generator import ICCGenerator
+    test_value = 64
+    icc_gen = ICCGenerator(gray_patch_count=test_value)
+    assert icc_gen.gray_patch_count == test_value
+
+
+def test_gray_patch_count_attribute_is_working_properly():
+    """testing if the gray_patch_count attribute is working properly
+    """
+    from icc_generator import ICCGenerator
+    test_value = 64
+    icc_gen = ICCGenerator()
+    assert icc_gen.gray_patch_count != test_value
+    icc_gen.gray_patch_count = test_value
+    assert icc_gen.gray_patch_count == test_value
+
+
 def test_gray_patch_count_is_updated_properly():
     """testing if the gray_patch_count is properly updated with the paper
     size and use_high_density_mode attribute values
@@ -996,23 +1080,27 @@ def test_gray_patch_count_is_updated_properly():
     assert icc_gen.gray_patch_count == 16
 
     icc_gen.number_of_pages = 2
-    assert icc_gen.gray_patch_count == 32
+    assert icc_gen.gray_patch_count == 16
 
     icc_gen.number_of_pages = 3
-    assert icc_gen.gray_patch_count == 48
+    assert icc_gen.gray_patch_count == 16
 
     icc_gen.number_of_pages = 4
-    assert icc_gen.gray_patch_count == 64
+    assert icc_gen.gray_patch_count == 16
+
+    icc_gen.gray_patch_count = 25
+    assert icc_gen.number_of_pages == 4
+    assert icc_gen.gray_patch_count == 25
 
 
-def test_gray_patch_count_is_read_only():
-    """testing if the gray_patch_count is a read only property
+def test_gray_patch_count_is_not_read_only():
+    """testing if the gray_patch_count is not a read only property
     """
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
     import pytest
-    with pytest.raises(AttributeError) as cm:
-        icc_gen.gray_patch_count = 120
+    icc_gen.gray_patch_count = 120
+    assert icc_gen.gray_patch_count == 120
 
 
 def test_patch_count_is_updating_properly():

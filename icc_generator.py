@@ -125,7 +125,8 @@ class ICCGenerator(object):
 
     def __init__(self, printer_brand="Canon", printer_model="iX6850", paper_brand="Kodak", paper_model="UPPP",
                  paper_finish="Glossy", paper_size=A4, ink_brand="CanonInk", use_high_density_mode=True,
-                 number_of_pages=1, copyright_info="", precondition_profile_path="", output_commands=False):
+                 number_of_pages=1, copyright_info="", precondition_profile_path="", output_commands=False,
+                 gray_patch_count=16):
 
         self.output_commands = output_commands
 
@@ -155,6 +156,9 @@ class ICCGenerator(object):
 
         self._number_of_pages = None
         self.number_of_pages = number_of_pages
+
+        self._gray_patch_count = None
+        self.gray_patch_count = gray_patch_count
 
         self._copyright_info = None
         self.copyright_info = copyright_info
@@ -512,7 +516,24 @@ class ICCGenerator(object):
     def gray_patch_count(self):
         """getter for the gray_patch_count attribute
         """
-        return self.number_of_pages * 16
+        return self._gray_patch_count
+
+    @gray_patch_count.setter
+    def gray_patch_count(self, gray_patch_count):
+        """setter for the gray_patch_count property
+
+        :param int gray_patch_count:
+        :return:
+        """
+        if not gray_patch_count or not isinstance(gray_patch_count, int):
+            raise TypeError(
+                "%s.gray_patch_count should be an int, not %s" % (
+                    self.__class__.__name__, gray_patch_count.__class__.__name__
+                )
+            )
+
+        self._gray_patch_count = gray_patch_count
+
 
     @classmethod
     def run_external_process(cls, command, shell=False):
