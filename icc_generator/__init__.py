@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -534,7 +534,6 @@ class ICCGenerator(object):
 
         self._gray_patch_count = gray_patch_count
 
-
     @classmethod
     def run_external_process(cls, command, shell=False):
         """Runs an external process and yields the output
@@ -724,7 +723,7 @@ class ICCGenerator(object):
         # colprof command
         command = [
             "colprof", "-v", "-qh", "-r0.5", "-S",
-            os.path.join(HERE, "AdobeRGB.icc"),
+            os.path.join(HERE, "../AdobeRGB.icc"),
             "-cmt", "-dpp", "-Zr", "-Zm",
             "-D%s" % self.profile_name
         ]
@@ -982,4 +981,3 @@ class MainWindow(QtWidgets.QMainWindow):
         """creates the dock widgets
         """
         pass
-

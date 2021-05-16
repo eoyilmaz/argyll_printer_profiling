@@ -1098,7 +1098,6 @@ def test_gray_patch_count_is_not_read_only():
     """
     from icc_generator import ICCGenerator
     icc_gen = ICCGenerator()
-    import pytest
     icc_gen.gray_patch_count = 120
     assert icc_gen.gray_patch_count == 120
 
