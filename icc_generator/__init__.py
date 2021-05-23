@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -887,16 +887,19 @@ class ICCGenerator(object):
         if not isinstance(image_profile, str):
             raise TypeError("image_profile should be one of sRGB or AdobeRGB, not %s" % image_profile)
 
-        if image_profile not in ["AdobeRGB", "sRGB"]:
-            raise ValueError("image_profile should be one of sRGB or AdobeRGB, not %s" % image_profile)
+        if not os.path.isfile(image_profile):
+            if image_profile not in ["AdobeRGB", "sRGB"]:
+                raise ValueError("image_profile should be one of sRGB or AdobeRGB, not %s" % image_profile)
+            image_profile_path = os.path.normpath(os.path.join(HERE, "..", "%s.icc" % image_profile))
+        else:
+            image_profile_path = image_profile
 
         # ************************
         # cctiff
         command = [
             "cctiff",
             "-i", intent,
-            "-p",
-            os.path.join(HERE, "%s.icc" % image_profile),
+            "-p", image_profile_path,
             printer_profile_path,
             input_image_path,
             output_image_path,

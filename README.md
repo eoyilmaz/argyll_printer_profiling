@@ -1,14 +1,14 @@
-# ArgyllCMS Printer Profiling Commands (with X-Rite ColorMunki Photo or X-Rite i1Pro 2) #
+# ArgyllCMS Printer Profiling (with X-Rite ColorMunki Photo or X-Rite i1Pro 2) #
 
-This is a set of commands to create Inkjet Printer Profiles with Argyll CMS and
-X-Rite ColorMunki Photo and X-Rite i1Pro 2.
+This is a Python module that lets the user to create Inkjet Printer Profiles
+with Argyll CMS and X-Rite ColorMunki Photo and X-Rite i1Pro 2.
 
-The commands are based on [Andres Torger's tutorial](https://www.ludd.ltu.se/~torger/photography/argyll-print.html).
+The system is based on [Andres Torger's tutorial](https://www.ludd.ltu.se/~torger/photography/argyll-print.html).
 Which is a great read if you want to do a quick entry to ArgyllCMS.
 
 ## How To Use ##
 
-The system is developed and tested under Fedora 31 and Windows 10.
+The system is developed and tested under Fedora 31/32/33/34 and Windows 10.
 
 ### Windows ###
 
@@ -17,11 +17,11 @@ Follow the steps for Windows:
  - Download [ArgyllCMS](https://www.argyllcms.com/), extract it to a folder.
    Add the ``Argyll_2.x.x/bin`` folder to your ``PATH`` environment variable,
    so you would be able to call the commands anywhere from your command line.
- - Setup your ColorMunki Photo to use the [ArgyllCMS driver](http://argyllcms.com/doc/Installing_MSWindows.html).
+ - Set up your ColorMunki Photo to use the [ArgyllCMS driver](http://argyllcms.com/doc/Installing_MSWindows.html).
  - To be able to print the generated color patches with **No Color Management**
    download [Dry Creek Photo Print Utility](https://www.drycreekphoto.com/tools/ChartPrinter/DryCreekPhotoPrintUtilitySetup.exe) 
    ([Adobe Color Printer Utility](https://helpx.adobe.com/photoshop/kb/no-color-management-option-missing.html) 
-   also works but it has a bug and prints smaller then it needs to be making
+   also works, but it has a bug and prints smaller than it needs to be making
    it harder to read with the device).
  - Install the ``DryCreekPhotoPrintUtility`` or if you choose to use the
    ``ACPU`` extract the ``ACPU.zip`` file content inside the project folder. So

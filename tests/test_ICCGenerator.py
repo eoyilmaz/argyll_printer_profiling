@@ -1404,7 +1404,6 @@ def test_generate_tif_files_will_generate_tif_files_from_target_file(file_collec
             "%s%s" % (icc_gen.profile_name, '.tif')
         )
     )
-    print("profile_absolute_full_path: %s" % profile_absolute_full_path)
     assert os.path.exists(profile_absolute_full_path)
     assert not os.path.exists(
         os.path.expanduser(
@@ -2424,9 +2423,36 @@ def test_color_correct_image_image_profile_is_working_properly(file_collector, p
         intent=intent
     )
 
-    print("patch_run_external_process[0]: %s" % patch_run_external_process_class_method_version[0])
     assert any("-p" in arg for arg in patch_run_external_process_class_method_version[0])
     assert any("sRGB" in arg for arg in patch_run_external_process_class_method_version[0])
+
+
+def test_color_correct_image_image_profile_is_a_path_to_sRGB_or_AdobeRGB_file(file_collector, patch_run_external_process_class_method_version):
+    """testing if the image_profile can be a path to sRGB or AdobeRGB file
+    """
+    import os
+    import tempfile
+    from icc_generator import ICCGenerator, HERE
+    printer_profile_path_handle, printer_profile_path = tempfile.mkstemp(suffix='.icc')
+    input_image_path_handle, input_image_path = tempfile.mkstemp(suffix='.tif')
+    output_image_path = tempfile.mktemp(suffix='.tif')
+    file_collector.append(printer_profile_path)
+    file_collector.append(input_image_path)
+
+    image_profile = os.path.normpath(os.path.join(HERE, '..', 'sRGB.icc'))
+    intent = "r"
+
+    ICCGenerator.color_correct_image(
+        printer_profile_path=printer_profile_path,
+        input_image_path=input_image_path,
+        output_image_path=output_image_path,
+        image_profile=image_profile,
+        intent=intent
+    )
+
+    assert any("-p" in arg for arg in patch_run_external_process_class_method_version[0])
+    assert any("sRGB" in arg for arg in patch_run_external_process_class_method_version[0])
+    assert any(image_profile in arg for arg in patch_run_external_process_class_method_version[0])
 
 
 def test_save_settings_path_is_skipped(file_collector):
