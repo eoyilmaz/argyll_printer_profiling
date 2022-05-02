@@ -1,5 +1,6 @@
-*.tif
 ACPU/*
 DCPP/*
 Outputs/*
 Trash/*
+__pycache__
+.pytest_cache/
