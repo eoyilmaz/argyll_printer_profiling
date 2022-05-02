@@ -21,19 +21,25 @@ ig.paper_size
 # Set Ink Details
 ig.ink_brand
 
-# Profiling workflow
-
+# Profiling workflow, run the following commands in the given order:
 ig.generate_target()
-ig.generate_tif_files()
+ig.generate_tif()
+ig.print_charts()
 ig.read_charts()
 ig.generate_profile()
 ig.check_profile(True)
+
 # Optional
-ig.read_charts(resume=True, read_mode=0) # use mode=1 for patch-by-patch
+# To fix misread patches (patches with too high dE values)
+# re-read the chart in resume mode
+ig.read_charts(resume=True, read_mode=0) # use read_mode=1 for patch-by-patch
+
+# Finally install the profile
 ig.install_profile()
 """
 import os
 import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -794,10 +800,15 @@ class ICCGenerator(object):
             )
         )
 
-        shutil.copy2(
-            icc_profile_absolute_full_path,
-            profile_install_path
-        )
+        try:
+            shutil.copy2(
+                icc_profile_absolute_full_path,
+                profile_install_path
+            )
+        except Exception as e:
+            traceback.print_exc()
+        else:
+            logger.info(f"Profile installed: {self.profile_absolute_path}")
 
     @classmethod
     def color_correct_image(cls, printer_profile_path=None, input_image_path=None, output_image_path=None, image_profile="AdobeRGB", intent="r"):
