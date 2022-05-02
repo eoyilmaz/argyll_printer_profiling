@@ -1290,7 +1290,7 @@ def test_profile_absolute_path_is_is_read_only():
     with pytest.raises(AttributeError) as cm:
         icc_gen.profile_absolute_path = os.path.expanduser(profile_path)
 
-    assert str(cm.value) == "can't set attribute"
+    assert str(cm.value) == "can't set attribute 'profile_absolute_path'"
 
 
 def test_profile_absolute_full_path_is_properly_calculated():
@@ -1331,7 +1331,7 @@ def test_profile_absolute_full_path_is_is_read_only():
     with pytest.raises(AttributeError) as cm:
         icc_gen.profile_absolute_full_path = os.path.expanduser(profile_path)
 
-    assert str(cm.value) == "can't set attribute"
+    assert str(cm.value) == "can't set attribute 'profile_absolute_full_path'"
 
 
 def test_generate_target_creates_the_output_folder(file_collector):
@@ -2536,7 +2536,8 @@ def test_load_settings_path_is_skipped():
     with pytest.raises(TypeError) as cm:
         icc_gen.load_settings()
 
-    assert str(cm.value) == "load_settings() missing 1 required positional argument: 'path'"
+    assert str(cm.value) == "ICCGenerator.load_settings() missing 1 required " \
+                            "positional argument: 'path'"
 
 
 def test_load_settings_path_is_none():

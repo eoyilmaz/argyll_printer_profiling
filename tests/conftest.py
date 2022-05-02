@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-@pytest.fixture("function")
+@pytest.fixture(scope="function")
 def file_collector():
     """collects files
     """
@@ -41,7 +41,7 @@ def file_collector():
     logger.debug("===========================")
 
 
-@pytest.fixture("function")
+@pytest.fixture(scope="function")
 def patch_run_external_process():
     """patches the given function
     """
@@ -61,7 +61,7 @@ def patch_run_external_process():
     ICCGenerator.run_external_process = orig_method
 
 
-@pytest.fixture("function")
+@pytest.fixture(scope="function")
 def patch_run_external_process_class_method_version():
     """patches the given function
     """
@@ -81,7 +81,7 @@ def patch_run_external_process_class_method_version():
     ICCGenerator.run_external_process = orig_method
 
 
-@pytest.fixture("function")
+@pytest.fixture(scope="function")
 def set_to_windows():
     """patches os.name to nt
     """
@@ -92,7 +92,7 @@ def set_to_windows():
     os.name = orig_value
 
 
-@pytest.fixture("function")
+@pytest.fixture(scope="function")
 def set_to_linux():
     """patches os.name to posix
     """
