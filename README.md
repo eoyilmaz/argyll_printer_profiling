@@ -63,7 +63,8 @@ The system is now a Python library. You do not need to use the command line
 tools.
 
 ```python
-from icc_generator import ICCGenerator
+
+from icc_generator.api import ICCGenerator
 
 ig = ICCGenerator()
 

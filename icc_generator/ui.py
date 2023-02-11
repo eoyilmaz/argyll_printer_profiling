@@ -2,7 +2,7 @@
 import sys
 
 import icc_generator
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 
 def ui_caller(app_in, executor, ui_class, **kwargs):

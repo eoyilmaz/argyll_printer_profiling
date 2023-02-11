@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
+import glob
+import os
 import pytest
 import logging
+
+from icc_generator.api import ICCGenerator
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture(scope="function")
 def file_collector():
-    """collects files
-    """
+    """Collect files."""
     files_and_folders = []
     yield files_and_folders
 
-    import os
-    import glob
     logger.debug("===========================")
     logger.debug("Removing collected file paths")
     for f in files_and_folders:
         f = os.path.expandvars(os.path.expanduser(f))
         if os.path.exists(f):
-            logger.debug('removing: %s' % f)
+            logger.debug("removing: %s" % f)
             if os.path.isdir(f):
                 try:
                     os.removedirs(f)
@@ -28,7 +30,7 @@ def file_collector():
                     # the directory is not empty
                     # remove all the files under it
                     # and then try again
-                    for d in glob.glob('%s/*' % f):
+                    for d in glob.glob("%s/*" % f):
                         # print("%s" % d)
                         os.remove(d)
                     try:
@@ -43,36 +45,29 @@ def file_collector():
 
 @pytest.fixture(scope="function")
 def patch_run_external_process():
-    """patches the given function
-    """
-    from icc_generator import ICCGenerator
+    """patches the given function"""
     orig_method = ICCGenerator.run_external_process
-
     commands = []
 
     def patched_run_external_process(self, command, shell=False):
         commands.append(command)
-        yield ''
+        yield ""
 
     ICCGenerator.run_external_process = patched_run_external_process
-
     yield commands
-
     ICCGenerator.run_external_process = orig_method
 
 
 @pytest.fixture(scope="function")
 def patch_run_external_process_class_method_version():
-    """patches the given function
-    """
-    from icc_generator import ICCGenerator
+    """patches the given function."""
     orig_method = ICCGenerator.run_external_process
 
     commands = []
 
     def patched_run_external_process(command, shell=False):
         commands.append(command)
-        yield ''
+        yield ""
 
     ICCGenerator.run_external_process = patched_run_external_process
 
@@ -83,21 +78,17 @@ def patch_run_external_process_class_method_version():
 
 @pytest.fixture(scope="function")
 def set_to_windows():
-    """patches os.name to nt
-    """
-    import os
+    """patches os.name to nt."""
     orig_value = os.name
-    os.name = 'nt'
+    os.name = "nt"
     yield None
     os.name = orig_value
 
 
 @pytest.fixture(scope="function")
 def set_to_linux():
-    """patches os.name to posix
-    """
-    import os
+    """patches os.name to posix."""
     orig_value = os.name
-    os.name = 'posix'
+    os.name = "posix"
     yield None
     os.name = orig_value
