@@ -202,6 +202,7 @@ class ICCGenerator(object):
 
     A3 = "A3"
     A4 = "A4"
+
     NORMAL_DENSITY = "normal_density"
     HIGH_DENSITY = "high_density"
 
@@ -305,7 +306,7 @@ class ICCGenerator(object):
         if "win32" in system_name:
             self.output_path = "%WINDIR%/System32/spool/drivers/color/"
         elif "darwin" in system_name:
-            self.output_path = "~/Library/ColorSync"
+            self.output_path = "~/Library/ColorSync/Profiles/"
 
     def save_settings(self, path=None):
         """saves the settings to the given path
@@ -887,7 +888,9 @@ class ICCGenerator(object):
             ~/Library/ColorSync/Profiles/
         """
         # check if the profile is not generated yet
-        icc_profile_absolute_full_path = "%s.icc" % self.profile_absolute_full_path
+        icc_profile_absolute_full_path = "{}.icc".format(
+            self.profile_absolute_full_path
+        )
         if not os.path.exists(icc_profile_absolute_full_path):
             raise RuntimeError("ICC file doesn't exist, please generate it first!")
 
