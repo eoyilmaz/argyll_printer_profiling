@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Tests for the ICCGenerator class."""
+
 import datetime
 import json
 import logging

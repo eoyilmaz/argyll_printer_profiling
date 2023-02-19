@@ -28,7 +28,7 @@ ig.generate_tif()  # This will output TIF file paths
 ig.print_charts()  # Can be skipped and TIF file paths can be directly used.
 ig.read_charts()
 ig.generate_profile()
-ig.check_profile(True)  # Look to the first couple of rows for unusually high errors.
+ig.check_profile(True)  # Look to the first couple of rows for high errors (dE > 3).
 
 # Optional
 # To fix misread patches (patches with too high dE values)
@@ -41,7 +41,7 @@ ig.install_profile()
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
 
 __version__ = "0.3.1"

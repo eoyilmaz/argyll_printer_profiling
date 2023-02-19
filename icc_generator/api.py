@@ -7,12 +7,140 @@ import platform
 import shutil
 import subprocess
 import traceback
-
+from typing import Union
 
 from icc_generator import logger
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+
+
+class PaperSize(object):
+    """Represents a standard paper size.
+
+    Has attributes like width, height, size, area. All measurements are in millimeters.
+
+    Args:
+        name (str): The name of the paper size.
+        width (float | int): The width of the paper in mm.
+        height (float | int): The height of the paper in mm.
+    """
+
+    def __init__(self, name: str, width: Union[float, int], height: Union[float, int]):
+        self._name = None
+        self._width = None
+        self._height = None
+        self.name = name
+        self.width = width
+        self.height = height
+
+    @property
+    def name(self) -> str:
+        """Return name value.
+
+        Returns:
+            str: The name value.
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        """Set the name value.
+
+        Args:
+            name (str): The name value.
+        """
+        if not isinstance(name, str):
+            raise TypeError("{}.name should be a str, not {}".format(
+                self.__class__.__name__, name.__class__.__name__
+            ))
+        self._name = name
+
+    @property
+    def width(self) -> float:
+        """Return the width.
+
+        Returns:
+            float: The width value.
+        """
+        return self._width
+
+    @width.setter
+    def width(self, width: Union[float, int]):
+        """Set the width.
+
+        Args:
+            width (int | float):
+        """
+        if not isinstance(width, (float, int)):
+            raise TypeError("{}.width should be a int or float, not {}".format(
+                self.__class__.__name__, width.__class__.__name__
+            ))
+        if width <= 0:
+            raise ValueError("{}.width should be a positive value, not {}".format(
+                self.__class__.__name__, width
+            ))
+        self._width = width
+
+    @property
+    def height(self) -> float:
+        """Return the height.
+
+        Returns:
+            float: The height value.
+        """
+        return self._height
+
+    @height.setter
+    def height(self, height: Union[float, int]):
+        """Set the height.
+
+        Args:
+            height (int | float):
+        """
+        if not isinstance(height, (float, int)):
+            raise TypeError("{}.height should be a int or float, not {}".format(
+                self.__class__.__name__, height.__class__.__name__
+            ))
+        if height <= 0:
+            raise ValueError("{}.height should be a positive value, not {}".format(
+                self.__class__.__name__, height
+            ))
+        self._height = height
+
+    @property
+    def size(self) -> tuple[float, float]:
+        """return the width and height as a list.
+
+        Returns:
+            List[float, float]: The width and height as a list.
+        """
+        return self.width, self.height
+
+    @size.setter
+    def size(self, size: Union[list, tuple]):
+        """Setter for the size attr."""
+        if not isinstance(size, (list, tuple)):
+            raise TypeError("{}.size should be a list, not {}".format(
+                self.__class__.__name__, size.__class__.__name__
+            ))
+
+        if len(size) != 2:
+            raise ValueError("{}.size should be a list or tuple of 2 items, not {}".format(
+                self.__class__.__name__, len(size)
+            ))
+
+        self.width = size[0]
+        self.height = size[1]
+
+    @property
+    def area(self):
+        """Return the area in mm2.
+
+        Returns:
+            float: The area in mm2.
+        """
+        return self.width * self.height
 
 
 class ICCGenerator(object):
