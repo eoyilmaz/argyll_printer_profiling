@@ -240,9 +240,28 @@ def test_area_is_read_only():
         ["Legal", 215.9, 355.6, 76774.04],
         ["Letter", 215.9, 279.4, 60322.46],
         ["LetterR", 279.4, 215.9, 60322.46],
-    ],
+    ]
 )
 def test_area_returns_paper_area_in_mm2(name, width, height, expected_result):
     """area returns paper area in mm2."""
     paper_size = PaperSize(name=name, width=width, height=height)
     assert expected_result == pytest.approx(paper_size.area, 0.001)
+
+
+@pytest.mark.parametrize(
+    "name,width,height",
+    [
+        ["A2", 420.0, 594.0],
+        ["A3", 297.0, 420.0],
+        ["A4", 210.0, 297.0],
+        ["A4R", 297.0, 210.0],
+        ["Legal", 215.9, 355.6],
+        ["Letter", 215.9, 279.4],
+        ["LetterR", 279.4, 215.9],
+    ]
+)
+def test_equality_op(name, width, height):
+    """Test equality operator."""
+    paper_size1 = PaperSize(name=name, width=width, height=height)
+    paper_size2 = PaperSize(name=name, width=width, height=height)
+    assert paper_size1 == paper_size2

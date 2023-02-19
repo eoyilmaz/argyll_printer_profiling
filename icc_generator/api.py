@@ -142,6 +142,36 @@ class PaperSize(object):
         """
         return self.width * self.height
 
+    def __eq__(self, other) -> bool:
+        """Check equality with other PaperSize instance.
+
+        Args:
+            other (PaperSize): The other PaperSize instance.
+        """
+        return self.name == other.name and self.width == other.width and self.height == other.height
+
+
+class PaperSizeFactory(object):
+    """Data class for different paper sizes."""
+
+    def __init__(self):
+        raise RuntimeError(
+            "PaperSizeFactory is meant to be used as a storage class. "
+            "Do not instantiate it."
+        )
+
+    paper_sizes = {
+        "4x6": PaperSize(name="4x6", width=101.6, height=152.4),
+        "11x17": PaperSize(name="11x17", width=279.4, height=431.8),
+        "A2": PaperSize(name="A2", width=420.0, height=594),
+        "A3": PaperSize(name="A3", width=297.0, height=420.0),
+        "A4": PaperSize(name="A4", width=210.0, height=297.0),
+        "A4R": PaperSize(name="A4R", width=297.0, height=210.0),
+        "Legal": PaperSize(name="Legal", width=215.9, height=355.6),
+        "Letter": PaperSize(name="Letter", width=215.9, height=279.4),
+        "LetterR": PaperSize(name="LetterR", width=279.4, height=215.9),
+    }
+
 
 class ICCGenerator(object):
     """Generates ICC profiles by using ArgyllCMS.
@@ -208,18 +238,41 @@ class ICCGenerator(object):
 
     __data__ = {
         "paper_size": {
-            A3: {
+            # TODO: Tests these values
+            "11x17": {
                 "patch_count": {
                     NORMAL_DENSITY: 445,
                     HIGH_DENSITY: 1392,
                 }
             },
-            A4: {
+    #       [101.6 x 152.4 mm]
+            "4x6": {
+                "patch_count": {
+                    NORMAL_DENSITY: 445,
+                    HIGH_DENSITY: 1392,
+                }
+            },
+
+            "A3": {
+                "patch_count": {
+                    NORMAL_DENSITY: 445,
+                    HIGH_DENSITY: 1392,
+                }
+            },
+            "A4": {
                 "patch_count": {
                     NORMAL_DENSITY: 210,
                     HIGH_DENSITY: 672,
                 }
             },
+    # A2       [420.0 x 594.0 mm]
+    # A3       [297.0 x 420.0 mm] (default)
+    # A4       [210.0 x 297.0 mm]
+    # A4R      [297.0 x 210.0 mm]
+    # Legal    [215.9 x 355.6 mm]
+    # Letter   [215.9 x 279.4 mm]
+    # LetterR  [279.4 x 215.9 mm]
+
         }
     }
 
