@@ -22,12 +22,13 @@ ig.paper_size
 ig.ink_brand
 
 # Profiling workflow, run the following commands in the given order:
+ig.gray_patch_count = 128  # default is 128, which should be quite enough.
 ig.generate_target()
-ig.generate_tif()
-ig.print_charts()
+ig.generate_tif()  # This will output TIF file paths
+ig.print_charts()  # Can be skipped and TIF file paths can be directly used.
 ig.read_charts()
 ig.generate_profile()
-ig.check_profile(True)
+ig.check_profile(True)  # Look to the first couple of rows for unusually high errors.
 
 # Optional
 # To fix misread patches (patches with too high dE values)
