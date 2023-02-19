@@ -108,7 +108,7 @@ class ICCGenerator(object):
         copyright_info="",
         precondition_profile_path="",
         output_commands=False,
-        gray_patch_count=16,
+        gray_patch_count=128,
     ):
         self.output_commands = output_commands
 
