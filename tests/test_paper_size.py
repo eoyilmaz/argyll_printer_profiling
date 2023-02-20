@@ -265,3 +265,9 @@ def test_equality_op(name, width, height):
     paper_size1 = PaperSize(name=name, width=width, height=height)
     paper_size2 = PaperSize(name=name, width=width, height=height)
     assert paper_size1 == paper_size2
+
+
+def test_equality_with_other_objects():
+    """Test equality with other objects."""
+    paper_size1 = PaperSize(name="A4", width=210, height=297)
+    assert paper_size1 != "A4"

@@ -3,6 +3,7 @@
 import datetime
 import json
 import os
+import pathlib
 import platform
 import shutil
 import subprocess
@@ -51,9 +52,11 @@ class PaperSize(object):
             name (str): The name value.
         """
         if not isinstance(name, str):
-            raise TypeError("{}.name should be a str, not {}".format(
-                self.__class__.__name__, name.__class__.__name__
-            ))
+            raise TypeError(
+                "{}.name should be a str, not {}".format(
+                    self.__class__.__name__, name.__class__.__name__
+                )
+            )
         self._name = name
 
     @property
@@ -73,13 +76,17 @@ class PaperSize(object):
             width (int | float):
         """
         if not isinstance(width, (float, int)):
-            raise TypeError("{}.width should be a int or float, not {}".format(
-                self.__class__.__name__, width.__class__.__name__
-            ))
+            raise TypeError(
+                "{}.width should be a int or float, not {}".format(
+                    self.__class__.__name__, width.__class__.__name__
+                )
+            )
         if width <= 0:
-            raise ValueError("{}.width should be a positive value, not {}".format(
-                self.__class__.__name__, width
-            ))
+            raise ValueError(
+                "{}.width should be a positive value, not {}".format(
+                    self.__class__.__name__, width
+                )
+            )
         self._width = width
 
     @property
@@ -99,13 +106,17 @@ class PaperSize(object):
             height (int | float):
         """
         if not isinstance(height, (float, int)):
-            raise TypeError("{}.height should be a int or float, not {}".format(
-                self.__class__.__name__, height.__class__.__name__
-            ))
+            raise TypeError(
+                "{}.height should be a int or float, not {}".format(
+                    self.__class__.__name__, height.__class__.__name__
+                )
+            )
         if height <= 0:
-            raise ValueError("{}.height should be a positive value, not {}".format(
-                self.__class__.__name__, height
-            ))
+            raise ValueError(
+                "{}.height should be a positive value, not {}".format(
+                    self.__class__.__name__, height
+                )
+            )
         self._height = height
 
     @property
@@ -121,14 +132,18 @@ class PaperSize(object):
     def size(self, size: Union[list, tuple]):
         """Setter for the size attr."""
         if not isinstance(size, (list, tuple)):
-            raise TypeError("{}.size should be a list, not {}".format(
-                self.__class__.__name__, size.__class__.__name__
-            ))
+            raise TypeError(
+                "{}.size should be a list, not {}".format(
+                    self.__class__.__name__, size.__class__.__name__
+                )
+            )
 
         if len(size) != 2:
-            raise ValueError("{}.size should be a list or tuple of 2 items, not {}".format(
-                self.__class__.__name__, len(size)
-            ))
+            raise ValueError(
+                "{}.size should be a list or tuple of 2 items, not {}".format(
+                    self.__class__.__name__, len(size)
+                )
+            )
 
         self.width = size[0]
         self.height = size[1]
@@ -148,29 +163,55 @@ class PaperSize(object):
         Args:
             other (PaperSize): The other PaperSize instance.
         """
-        return self.name == other.name and self.width == other.width and self.height == other.height
+        return (
+            isinstance(other, PaperSize)
+            and self.name == other.name
+            and self.width == other.width
+            and self.height == other.height
+        )
+
+    def __hash__(self):
+        """overriden hash value."""
+        return hash(self.name) + 2 * hash(self.width) + 3 * hash(self.height)
 
 
-class PaperSizeFactory(object):
+class PaperSizeLibrary(object):
     """Data class for different paper sizes."""
 
     def __init__(self):
         raise RuntimeError(
-            "PaperSizeFactory is meant to be used as a storage class. "
+            "PaperSizeLibrary is meant to be used as a storage class. "
             "Do not instantiate it."
         )
 
+    p4x6 = PaperSize(name="4x6", width=101.6, height=152.4)
+    p11x17 = PaperSize(name="11x17", width=279.4, height=431.8)
+    A2 = PaperSize(name="A2", width=420.0, height=594)
+    A3 = PaperSize(name="A3", width=297.0, height=420.0)
+    A3R = PaperSize(name="A3R", width=420.0, height=297.0)
+    A4 = PaperSize(name="A4", width=210.0, height=297.0)
+    A4R = PaperSize(name="A4R", width=297.0, height=210.0)
+    Legal = PaperSize(name="Legal", width=215.9, height=355.6)
+    Letter = PaperSize(name="Letter", width=215.9, height=279.4)
+    LetterR = PaperSize(name="LetterR", width=279.4, height=215.9)
+
     paper_sizes = {
-        "4x6": PaperSize(name="4x6", width=101.6, height=152.4),
-        "11x17": PaperSize(name="11x17", width=279.4, height=431.8),
-        "A2": PaperSize(name="A2", width=420.0, height=594),
-        "A3": PaperSize(name="A3", width=297.0, height=420.0),
-        "A4": PaperSize(name="A4", width=210.0, height=297.0),
-        "A4R": PaperSize(name="A4R", width=297.0, height=210.0),
-        "Legal": PaperSize(name="Legal", width=215.9, height=355.6),
-        "Letter": PaperSize(name="Letter", width=215.9, height=279.4),
-        "LetterR": PaperSize(name="LetterR", width=279.4, height=215.9),
+        "4x6": p4x6,
+        "11x17": p11x17,
+        "A2": A2,
+        "A3": A3,
+        "A3R": A3R,
+        "A4": A4,
+        "A4R": A4R,
+        "Legal": Legal,
+        "Letter": Letter,
+        "LetterR": LetterR,
     }
+
+    @classmethod
+    def get_paper_size(cls, paper_size_name):
+        """Return paper size."""
+        return cls.paper_sizes.get(paper_size_name)
 
 
 class ICCGenerator(object):
@@ -189,6 +230,15 @@ class ICCGenerator(object):
       Uncorrected and Image Type to Photograph)
 
     - Use /usr/share/color/icc/ or ~/.local/share/icc to install the profiles
+
+    MacOS Workflow notes:
+
+    - Printing the targets with macOS requires an application that can disable the ICC
+      profiles. Don't use Adobe Photoshop as there is no way to disable the usage of ICC
+      profiles. Adobe Color Printer Utility is also not working properly with the latest
+      versions of macOS. The best alternative I found so far is
+      [Print-Tool](https://www.quadtonerip.com/html/QTRprinttool.html "Print-Tool") is a
+      very suitable tool, albeit non-free.
 
     If the ``use_high_density_mode`` is set to True the system uses the i1pro patch
     pattern which is much denser than the one for ColorMunki.
@@ -212,7 +262,7 @@ class ICCGenerator(object):
 
             $APPDATA/ICCGenerator/%{printer_brand}_%{printer_model}/%{profile_date}
 
-        For Linux:
+        For Linux nad MacOS:
 
             ~/.cache/IccGenerator/%{printer_brand}_%{printer_model}/%{profile_date}
 
@@ -228,51 +278,124 @@ class ICCGenerator(object):
 
             ~/.local/share/icc/
 
+        For MacOS:
+
+            ~/Library/ColorSync/Profiles/
+
     """
-
-    A3 = "A3"
-    A4 = "A4"
-
     NORMAL_DENSITY = "normal_density"
     HIGH_DENSITY = "high_density"
 
     __data__ = {
         "paper_size": {
-            # TODO: Tests these values
-            "11x17": {
+            PaperSizeLibrary.p11x17: {
+                "patch_count": {
+                    NORMAL_DENSITY: int(
+                        210
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["11x17"].area
+                    ),
+                    HIGH_DENSITY: int(
+                        672
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["11x17"].area
+                    ),
+                }
+            },
+            PaperSizeLibrary.p4x6: {
+                "patch_count": {
+                    NORMAL_DENSITY: int(
+                        210
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["4x6"].area
+                    ),
+                    HIGH_DENSITY: int(
+                        672
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["4x6"].area
+                    ),
+                }
+            },
+            PaperSizeLibrary.A2: {
+                "patch_count": {
+                    NORMAL_DENSITY: int(
+                        445
+                        / PaperSizeLibrary.paper_sizes["A3"].area
+                        * PaperSizeLibrary.paper_sizes["A2"].area
+                    ),
+                    HIGH_DENSITY: int(
+                        1392
+                        / PaperSizeLibrary.paper_sizes["A3"].area
+                        * PaperSizeLibrary.paper_sizes["A2"].area
+                    ),
+                }
+            },
+            PaperSizeLibrary.A3: {
                 "patch_count": {
                     NORMAL_DENSITY: 445,
                     HIGH_DENSITY: 1392,
                 }
             },
-    #       [101.6 x 152.4 mm]
-            "4x6": {
+            PaperSizeLibrary.A3R: {
                 "patch_count": {
                     NORMAL_DENSITY: 445,
                     HIGH_DENSITY: 1392,
                 }
             },
-
-            "A3": {
-                "patch_count": {
-                    NORMAL_DENSITY: 445,
-                    HIGH_DENSITY: 1392,
-                }
-            },
-            "A4": {
+            PaperSizeLibrary.A4: {
                 "patch_count": {
                     NORMAL_DENSITY: 210,
                     HIGH_DENSITY: 672,
                 }
             },
-    # A2       [420.0 x 594.0 mm]
-    # A3       [297.0 x 420.0 mm] (default)
-    # A4       [210.0 x 297.0 mm]
-    # A4R      [297.0 x 210.0 mm]
-    # Legal    [215.9 x 355.6 mm]
-    # Letter   [215.9 x 279.4 mm]
-    # LetterR  [279.4 x 215.9 mm]
-
+            PaperSizeLibrary.A4R: {
+                "patch_count": {
+                    NORMAL_DENSITY: 210,
+                    HIGH_DENSITY: 672,
+                }
+            },
+            PaperSizeLibrary.Legal: {
+                "patch_count": {
+                    NORMAL_DENSITY: int(
+                        210
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["Legal"].area
+                    ),
+                    HIGH_DENSITY: int(
+                        672
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["Legal"].area
+                    ),
+                }
+            },
+            PaperSizeLibrary.Letter: {
+                "patch_count": {
+                    NORMAL_DENSITY: int(
+                        210
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["Letter"].area
+                    ),
+                    HIGH_DENSITY: int(
+                        672
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["Letter"].area
+                    ),
+                }
+            },
+            PaperSizeLibrary.LetterR: {
+                "patch_count": {
+                    NORMAL_DENSITY: int(
+                        210
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["LetterR"].area
+                    ),
+                    HIGH_DENSITY: int(
+                        672
+                        / PaperSizeLibrary.paper_sizes["A4"].area
+                        * PaperSizeLibrary.paper_sizes["LetterR"].area
+                    ),
+                }
+            },
         }
     }
 
@@ -283,7 +406,7 @@ class ICCGenerator(object):
         paper_brand="Kodak",
         paper_model="UPPP",
         paper_finish="Glossy",
-        paper_size=A4,
+        paper_size=None,
         ink_brand="CanonInk",
         use_high_density_mode=True,
         number_of_pages=1,
@@ -309,6 +432,9 @@ class ICCGenerator(object):
         self._paper_finish = None
         self.paper_finish = paper_finish
 
+        # set the default value for paper_size
+        if paper_size is None:
+            paper_size = PaperSizeLibrary.A4
         self._paper_size = None
         self.paper_size = paper_size
 
@@ -378,7 +504,7 @@ class ICCGenerator(object):
             "paper_brand": self.paper_brand,
             "paper_finish": self.paper_finish,
             "paper_model": self.paper_model,
-            "paper_size": self.paper_size,
+            "paper_size": self.paper_size.name,
             "printer_brand": self.printer_brand,
             "printer_model": self.printer_model,
             "profile_date": self.profile_date,
@@ -409,7 +535,7 @@ class ICCGenerator(object):
         self.paper_brand = data["paper_brand"]
         self.paper_finish = data["paper_finish"]
         self.paper_model = data["paper_model"]
-        self.paper_size = data["paper_size"]
+        self.paper_size = PaperSizeLibrary.get_paper_size(data["paper_size"])
         self.printer_brand = data["printer_brand"]
         self.printer_model = data["printer_model"]
         self.profile_date = data["profile_date"]
@@ -492,22 +618,11 @@ class ICCGenerator(object):
     @paper_size.setter
     def paper_size(self, paper_size):
         """getter for the paper_size attribute"""
-        if not paper_size or not isinstance(paper_size, str):
+        if not paper_size or not isinstance(paper_size, PaperSize):
             raise TypeError(
-                "%s.paper_size should be a str, not %s"
+                "%s.paper_size should be a PaperSize instance, not %s"
                 % (self.__class__.__name__, paper_size.__class__.__name__)
             )
-
-        if paper_size not in self.__data__["paper_size"]:
-            raise ValueError(
-                "%s.paper_size should be one of %s, not %s"
-                % (
-                    self.__class__.__name__,
-                    list(self.__data__["paper_size"].keys()),
-                    paper_size,
-                )
-            )
-
         self._paper_size = paper_size
 
     @property
@@ -593,7 +708,7 @@ class ICCGenerator(object):
             paper_brand=self.paper_brand,
             paper_model=self.paper_model,
             paper_finish=self.paper_finish,
-            paper_size=self.paper_size,
+            paper_size=self.paper_size.name,
             ink_brand=self.ink_brand,
             profile_date=self.profile_date,
             profile_time=self.profile_time,
@@ -616,7 +731,7 @@ class ICCGenerator(object):
             paper_brand=self.paper_brand,
             paper_model=self.paper_model,
             paper_finish=self.paper_finish,
-            paper_size=self.paper_size,
+            paper_size=self.paper_size.name,
             ink_brand=self.ink_brand,
             profile_date=self.profile_date,
             profile_time=self.profile_time,
@@ -755,7 +870,7 @@ class ICCGenerator(object):
             "-M2",
             "-L",
             "-p",
-            "420x297" if self.paper_size == "A3" else self.paper_size,
+            "{:0.1f}x{:0.1f}".format(*self.paper_size.size),
             self.profile_absolute_full_path,
         ]
 
@@ -899,7 +1014,11 @@ class ICCGenerator(object):
             print(output)
 
     def check_profile(self, sort_by_de=False):
-        """Checks the profile quality"""
+        """Check the profile quality.
+
+        Args:
+            sort_by_de (bool): Sort by dE value or not. Default is False.
+        """
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
@@ -914,7 +1033,8 @@ class ICCGenerator(object):
 
         command.append("%s.ti3" % self.profile_absolute_full_path)
 
-        if os.name == "nt":
+        system_name = platform.system().lower()
+        if "win32" in system_name:
             # windows uses *.icm file extension
             command.append("%s.icm" % self.profile_absolute_full_path)
         else:
@@ -1060,7 +1180,7 @@ class ICCGenerator(object):
 
         if not isinstance(intent, str):
             raise TypeError(
-                "intent should be a string, not %s" % intent.__class__.__name__
+                "intent should be a str, not %s" % intent.__class__.__name__
             )
 
         if intent not in ["p", "r", "s", "a"]:
@@ -1073,18 +1193,22 @@ class ICCGenerator(object):
 
         if not isinstance(image_profile, str):
             raise TypeError(
-                "image_profile should be one of sRGB or AdobeRGB, not %s"
-                % image_profile
+                "image_profile should be one of sRGB or AdobeRGB, not {}".format(
+                    image_profile
+                )
             )
 
-        if not os.path.isfile(image_profile):
-            if image_profile not in ["AdobeRGB", "sRGB"]:
+        image_profile = pathlib.Path(image_profile)
+        if not image_profile.is_file():
+            base_name = image_profile.stem
+            if base_name.lower() not in ["adobergb", "srgb"]:
                 raise ValueError(
-                    "image_profile should be one of sRGB or AdobeRGB, not %s"
-                    % image_profile
+                    "image_profile should be one of sRGB or AdobeRGB, not {}".format(
+                        image_profile
+                    )
                 )
             image_profile_path = os.path.normpath(
-                os.path.join(HERE, "..", "%s.icc" % image_profile)
+                os.path.join(HERE, "..", "{}.icc".format(image_profile))
             )
         else:
             image_profile_path = image_profile
@@ -1104,6 +1228,6 @@ class ICCGenerator(object):
 
         # call the command
         # yield from self.run_external_process(command)
-        print("command: %s" % " ".join(command))
+        print("command: {}".format(" ".join(command)))
         for output in cls.run_external_process(command):
             print(output)

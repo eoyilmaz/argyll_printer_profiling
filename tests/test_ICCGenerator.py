@@ -11,7 +11,7 @@ import tempfile
 import pytest
 
 from icc_generator import logger
-from icc_generator.api import ICCGenerator, HERE
+from icc_generator.api import ICCGenerator, HERE, PaperSizeLibrary
 
 
 def test_initializing_without_any_args():
@@ -24,7 +24,7 @@ def test_initializing_without_any_args():
     assert icc_gen.paper_brand == "Kodak"
     assert icc_gen.paper_model == "UPPP"
     assert icc_gen.paper_finish == "Glossy"
-    assert icc_gen.paper_size == "A4"
+    assert icc_gen.paper_size == PaperSizeLibrary.A4
     assert icc_gen.ink_brand == "CanonInk"
     assert icc_gen.use_high_density_mode is True
     assert icc_gen.number_of_pages == 1
@@ -349,14 +349,13 @@ def test_ink_brand_attr_is_working_properly():
 def test_paper_size_arg_is_skipped():
     """default value is used if paper_size arg is skipped."""
     icc_gen = ICCGenerator()
-    assert icc_gen.paper_size == "A4"
+    assert icc_gen.paper_size == PaperSizeLibrary.A4
 
 
 def test_paper_size_arg_is_none():
-    """paper_size arg is set to None will raise an TypeError."""
-    with pytest.raises(TypeError) as cm:
-        _ = ICCGenerator(paper_size=None)
-    assert str(cm.value) == "ICCGenerator.paper_size should be a str, not NoneType"
+    """paper_size arg is set to None will use the default."""
+    ig = ICCGenerator(paper_size=None)
+    assert PaperSizeLibrary.A4 == ig.paper_size
 
 
 def test_paper_size_attr_is_set_to_none():
@@ -364,53 +363,43 @@ def test_paper_size_attr_is_set_to_none():
     icc_gen = ICCGenerator()
     with pytest.raises(TypeError) as cm:
         icc_gen.paper_size = None
-    assert str(cm.value) == "ICCGenerator.paper_size should be a str, not NoneType"
-
-
-def test_paper_size_arg_is_not_a_str():
-    """TypeError raised if paper_size arg value is not a str."""
-    with pytest.raises(TypeError) as cm:
-        _ = ICCGenerator(paper_size=312)
-    assert str(cm.value) == "ICCGenerator.paper_size should be a str, not int"
-
-
-def test_paper_size_attr_is_not_set_to_a_str():
-    """TypeError raised if paper_size attr is set to a value other than a str."""
-    icc_gen = ICCGenerator()
-    with pytest.raises(TypeError) as cm:
-        icc_gen.paper_size = 443
-    assert str(cm.value) == "ICCGenerator.paper_size should be a str, not int"
-
-
-def test_paper_size_arg_value_is_not_one_of_the_enum_values():
-    """ValueError raised if paper_size arg is not one of the enum values."""
-    with pytest.raises(ValueError) as cm:
-        _ = ICCGenerator(paper_size="A2")
     assert (
-        str(cm.value) == "ICCGenerator.paper_size should be one of ['A3', 'A4'], not A2"
+        str(cm.value) ==
+        "ICCGenerator.paper_size should be a PaperSize instance, not NoneType"
     )
 
 
-def test_paper_size_attr_value_is_not_one_of_the_enum_values():
-    """ValueError raised if paper_size attr is not set to one of the enums."""
-    icc_gen = ICCGenerator()
-    with pytest.raises(ValueError) as cm:
-        icc_gen.paper_size = "A2"
+def test_paper_size_arg_is_not_a_paper_size_object():
+    """TypeError raised if paper_size arg value is not a PaperSize instance."""
+    with pytest.raises(TypeError) as cm:
+        _ = ICCGenerator(paper_size=312)
     assert (
-        str(cm.value) == "ICCGenerator.paper_size should be one of ['A3', 'A4'], not A2"
+        str(cm.value)
+        == "ICCGenerator.paper_size should be a PaperSize instance, not int"
+    )
+
+
+def test_paper_size_attr_is_not_set_to_a_paper_size_instance():
+    """TypeError raised if paper_size attr is not a PaperSize instance."""
+    icc_gen = ICCGenerator()
+    with pytest.raises(TypeError) as cm:
+        icc_gen.paper_size = 443
+    assert (
+        str(cm.value)
+        == "ICCGenerator.paper_size should be a PaperSize instance, not int"
     )
 
 
 def test_paper_size_arg_is_working_properly():
     """paper_size arg value is properly passed to the paper_size attr."""
-    test_value = "A3"
+    test_value = PaperSizeLibrary.A3
     icc_gen = ICCGenerator(paper_size=test_value)
     assert icc_gen.paper_size == test_value
 
 
 def test_paper_size_attr_is_working_properly():
     """paper_size attr is working properly."""
-    test_value = "A3"
+    test_value = PaperSizeLibrary.A3
     icc_gen = ICCGenerator()
     assert icc_gen.paper_size != test_value
     icc_gen.paper_size = test_value
@@ -671,12 +660,8 @@ def test_initializing_non_default_values():
 
 def test_paper_sizes():
     """default page sizes are working properly."""
-    assert ICCGenerator.A3 == "A3"
-    assert ICCGenerator.A4 == "A4"
-
     icc_gen = ICCGenerator()
-    assert icc_gen.A3 == "A3"
-    assert icc_gen.A4 == "A4"
+    assert icc_gen.paper_size == PaperSizeLibrary.A4
 
 
 def test_per_page_patch_count_is_updated_properly():
@@ -684,7 +669,7 @@ def test_per_page_patch_count_is_updated_properly():
     icc_gen = ICCGenerator()
 
     # Set the paper size to A4
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     icc_gen.use_high_density_mode = False
     assert icc_gen.per_page_patch_count == 210
 
@@ -692,7 +677,7 @@ def test_per_page_patch_count_is_updated_properly():
     assert icc_gen.per_page_patch_count == 672
 
     # Set the paper size to A3
-    icc_gen.paper_size = icc_gen.A3
+    icc_gen.paper_size = PaperSizeLibrary.A3
     icc_gen.use_high_density_mode = False
     assert icc_gen.per_page_patch_count == 445
 
@@ -710,7 +695,7 @@ def test_patch_count_is_read_only():
 def test_gray_patch_count_arg_is_skipped():
     """default value is used if gray_patch_count arg is skipped."""
     icc_gen = ICCGenerator()
-    assert icc_gen.gray_patch_count == 16
+    assert icc_gen.gray_patch_count == 128
 
 
 def test_gray_patch_count_arg_is_none():
@@ -769,18 +754,18 @@ def test_gray_patch_count_is_updated_properly():
     icc_gen = ICCGenerator()
 
     # Set the paper size to A4
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     icc_gen.number_of_pages = 1
-    assert icc_gen.gray_patch_count == 16
+    assert icc_gen.gray_patch_count == 128
 
     icc_gen.number_of_pages = 2
-    assert icc_gen.gray_patch_count == 16
+    assert icc_gen.gray_patch_count == 128
 
     icc_gen.number_of_pages = 3
-    assert icc_gen.gray_patch_count == 16
+    assert icc_gen.gray_patch_count == 128
 
     icc_gen.number_of_pages = 4
-    assert icc_gen.gray_patch_count == 16
+    assert icc_gen.gray_patch_count == 128
 
     icc_gen.gray_patch_count = 25
     assert icc_gen.number_of_pages == 4
@@ -800,7 +785,7 @@ def test_patch_count_is_updating_properly():
 
     # Paper Size:A4
     # Use High Density Mode: False
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     icc_gen.use_high_density_mode = False
 
     # 1 Page
@@ -832,7 +817,7 @@ def test_patch_count_is_updating_properly():
 
     # Paper Size:A3
     # Use High Density Mode: False
-    icc_gen.paper_size = icc_gen.A3
+    icc_gen.paper_size = PaperSizeLibrary.A3
     icc_gen.use_high_density_mode = False
 
     # 1 Page
@@ -999,7 +984,7 @@ def test_generate_target_creates_the_output_folder(file_collector):
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 1
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     file_collector.append(icc_gen.profile_absolute_path)
     icc_gen.generate_target()
     assert os.path.exists(os.path.expanduser(os.path.join(icc_gen.output_path)))
@@ -1012,7 +997,7 @@ def test_generate_target_generates_ti_file(file_collector):
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 1
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
     expected_path = os.path.expanduser(
@@ -1028,7 +1013,7 @@ def test_generate_tif_files_will_generate_tif_files_from_target_file(file_collec
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 1
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
     icc_gen.generate_tif()
@@ -1052,7 +1037,7 @@ def test_generate_tif_files_will_generates_correct_amount_of_tif_files(file_coll
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 2
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     # append the folder to the file_collector
     # so, it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
@@ -1083,7 +1068,7 @@ def test_generate_tif_files_will_fill_tif_files_attr_single_page(file_collector)
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 1
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     # append the folder to the file_collector
     # so, it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
@@ -1105,7 +1090,7 @@ def test_generate_tif_files_will_fill_tif_files_attr_more_than_one_page(file_col
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 2
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     # append the folder to the file_collector
     # so, it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
@@ -1132,7 +1117,7 @@ def test_generate_tif_files_will_clear_the_tif_files_list(file_collector):
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 2
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     # append the folder to the file_collector
     # so, it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
@@ -1175,7 +1160,7 @@ def test_generate_tif_files_with_high_density_mode(
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 2
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     # append the folder to the file_collector
     # so, it is cleaned up after the test
     file_collector.append(icc_gen.profile_path)
@@ -1196,7 +1181,7 @@ def test_generate_tif_files_with_normal_density_mode(
     # check them
     # set it to use only one A4 page
     icc_gen.number_of_pages = 2
-    icc_gen.paper_size = icc_gen.A4
+    icc_gen.paper_size = PaperSizeLibrary.A4
     icc_gen.use_high_density_mode = False
     # append the folder to the file_collector
     # so, it is cleaned up after the test
@@ -1358,7 +1343,7 @@ def test_check_profile_with_sort(file_collector, patch_run_external_process):
     icc_gen.print_charts()
     icc_gen.read_charts()
     icc_gen.generate_profile()
-    icc_gen.check_profile(sort_by_dE=True)
+    icc_gen.check_profile(sort_by_de=True)
 
     final_command = patch_run_external_process[-1]
     assert "profcheck" in final_command[0]
@@ -1382,7 +1367,7 @@ def test_check_profile_with_correct_file_extension(
     icc_gen.print_charts()
     icc_gen.read_charts()
     icc_gen.generate_profile()
-    icc_gen.check_profile(sort_by_dE=True)
+    icc_gen.check_profile(sort_by_de=True)
 
     final_command = patch_run_external_process[-1]
     assert "profcheck" in final_command[0]
@@ -1423,13 +1408,20 @@ def test_install_profile_1(file_collector, patch_run_external_process):
     # this is easy
     # just check if ICC file is copied to the correct folder
     profile_install_path = None
-    if os.name == "nt":
+    system_name = platform.system().lower()
+    if "win32" in system_name:
         profile_install_path = os.path.expandvars(
             "$WINDIR/System32spool/drivers/color/%s.icc" % icc_gen.profile_name
         )
-    elif os.name == "posix":
+    elif "linux" in system_name:
         profile_install_path = os.path.expandvars(
             os.path.expanduser("~/.local/share/icc/%s.icc" % icc_gen.profile_name)
+        )
+    elif "darwin" in system_name :
+        profile_install_path = os.path.expandvars(
+            os.path.expanduser("~/Library/ColorSync/Profiles/{}.icc".format(
+                icc_gen.profile_name
+            ))
         )
 
     assert profile_install_path is not None
@@ -1469,6 +1461,12 @@ def test_output_path_for_linux(set_to_linux):
     """output_path variable is correctly set for Linux."""
     icc_gen = ICCGenerator()
     assert icc_gen.output_path == "~/.local/share/icc/"
+
+
+def test_output_path_for_macos(set_to_macos):
+    """output_path variable is correctly set for macOS."""
+    icc_gen = ICCGenerator()
+    assert icc_gen.output_path == "~/Library/ColorSync/Profiles/"
 
 
 def test_color_correct_image_printer_profile_path_is_skipped(
@@ -2052,7 +2050,7 @@ def test_save_settings_is_working_properly(file_collector, patch_run_external_pr
     icc_gen.paper_brand = data["paper_brand"]
     icc_gen.paper_finish = data["paper_finish"]
     icc_gen.paper_model = data["paper_model"]
-    icc_gen.paper_size = data["paper_size"]
+    icc_gen.paper_size.name = data["paper_size"]
     icc_gen.printer_brand = data["printer_brand"]
     icc_gen.printer_model = data["printer_model"]
     icc_gen.profile_date = data["profile_date"]
@@ -2067,7 +2065,7 @@ def test_load_settings_path_is_skipped():
 
     assert (
         str(cm.value) == "ICCGenerator.load_settings() missing 1 required "
-        "positional arg: 'path'"
+        "positional argument: 'path'"
     )
 
 
@@ -2107,7 +2105,7 @@ def test_load_settings_is_working_properly(file_collector):
     icc_gen.paper_brand = "Agfa"
     icc_gen.paper_finish = "Glossy"
     icc_gen.paper_model = "HGPIP"
-    icc_gen.paper_size = "A4"
+    icc_gen.paper_size = PaperSizeLibrary.A4
     icc_gen.printer_brand = "Epson"
     icc_gen.printer_model = "L800"
 

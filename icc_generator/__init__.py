@@ -5,18 +5,19 @@ that does the ICC Profile creation.
 
 Workflow:
 
-from icc_generator.api import ICCGenerator
+from icc_generator.api import ICCGenerator, PaperSizeLibrary
+
 ig = ICCGenerator()
 
 # Set Printer Details
-ig.printer_brand
-ig.printer_model
+ig.printer_brand = "Canon"
+ig.printer_model = "iX6850"
 
 # Set Paper Details
-ig.paper_brand
-ig.paper_model
-ig.paper_finish
-ig.paper_size
+ig.paper_brand = "Kodak"
+ig.paper_model = "UPPP"
+ig.paper_finish = "Glossy"
+ig.paper_size = PaperSizeLibrary.A4  # Or generate a custom size.
 
 # Set Ink Details
 ig.ink_brand
@@ -41,9 +42,9 @@ ig.install_profile()
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 
 

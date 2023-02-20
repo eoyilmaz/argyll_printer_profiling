@@ -42,6 +42,17 @@ Follow the steps for Linux:
    alternatives etc.
  - You can use Gimp + GutenPrint, and print with **no color correction**.
 
+### MacOS ###
+
+Nearly same as Linux:
+
+ - Printing the targets with macOS requires an application that can disable the ICC
+   profiles. Don't use Adobe Photoshop as there is no way to disable the usage of ICC
+   profiles. Adobe Color Printer Utility is also not working properly with the latest
+   versions of macOS. The best alternative I found so far is
+   [Print-Tool](https://www.quadtonerip.com/html/QTRprinttool.html "Print-Tool") is a
+   very suitable tool, albeit non-free.
+
 ### For Both Windows and Linux ###
 
 For both windows and Linux the rest of the steps are same.
@@ -63,8 +74,7 @@ The system is now a Python library. You do not need to use the command line
 tools.
 
 ```python
-
-from icc_generator.api import ICCGenerator
+from icc_generator.api import ICCGenerator, PaperSizeLibrary
 
 ig = ICCGenerator()
 
@@ -76,22 +86,26 @@ ig.printer_model = "iX6850"
 ig.paper_brand = "Kodak"
 ig.paper_model = "UPPP"
 ig.paper_finish = "Glossy"
-ig.paper_size = "A4"
+ig.paper_size = PaperSizeLibrary.A4  # Or generate a custom size.
 
 # Set Ink Details
 ig.ink_brand = "CanonInk"
 
-# Profiling workflow
+# Profiling workflow, run the following commands in the given order:
+ig.gray_patch_count = 128  # default is 128, which should be quite enough.
 ig.generate_target()
-ig.generate_tif()
+ig.generate_tif()  # This will output TIF file paths
+ig.print_charts()  # Can be skipped and TIF file paths can be directly used.
 ig.read_charts()
 ig.generate_profile()
-ig.check_profile(True)
-# Optionally you can re-read erroneous patches
-# use read_mode=1 for patch-by-patch
-ig.read_charts(resume=True, read_mode=0)
+ig.check_profile(True)  # Look to the first couple of rows for high errors (dE > 3).
 
-# install the profile to the correct location for your system
+# Optional
+# To fix misread patches (patches with too high dE values)
+# re-read the chart in resume mode
+ig.read_charts(resume=True, read_mode=0) # use read_mode=1 for patch-by-patch
+
+# Finally install the profile
 ig.install_profile()
 ```
 

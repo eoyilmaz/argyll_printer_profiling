@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import glob
 import os
+import platform
+
 import pytest
 import logging
 
@@ -79,16 +81,37 @@ def patch_run_external_process_class_method_version():
 @pytest.fixture(scope="function")
 def set_to_windows():
     """patches os.name to nt."""
-    orig_value = os.name
-    os.name = "nt"
+    orig_value = platform.system
+
+    def mock_platform_system():
+        return "win32"
+
+    platform.system = mock_platform_system
     yield None
-    os.name = orig_value
+    platform.system = orig_value
 
 
 @pytest.fixture(scope="function")
 def set_to_linux():
     """patches os.name to posix."""
-    orig_value = os.name
-    os.name = "posix"
+    orig_value = platform.system
+
+    def mock_platform_system():
+        return "linux"
+
+    platform.system = mock_platform_system
     yield None
-    os.name = orig_value
+    platform.system = orig_value
+
+
+@pytest.fixture(scope="function")
+def set_to_macos():
+    """patches os.name to posix."""
+    orig_value = platform.system
+
+    def mock_platform_system():
+        return "darwin"
+
+    platform.system = mock_platform_system
+    yield None
+    platform.system = orig_value
