@@ -64,5 +64,18 @@ def test_paper_size_library_paper_names():
     ]
 )
 def test_get_paper_size_is_working_okay(paper_size_name, expected_value):
-    """PaperSizeLibrary.get_paper_size() returns PaperSize with name."""
+    """get_paper_size() returns PaperSize with name."""
     assert expected_value == PaperSizeLibrary.get_paper_size(paper_size_name)
+
+
+def test_get_paper_size_paper_size_name_is_not_a_str():
+    """get_paper_size() raises a TypeError if the given paper_size_name is not a str."""
+    with pytest.raises(TypeError) as cm:
+        _ = PaperSizeLibrary.get_paper_size(2314)
+
+    assert str(cm.value) == "paper_size_name should be a str, not int"
+
+
+def test_get_paper_size_paper_size_name_doesnt_exist_in_the_library():
+    """get_paper_size() paper_size_name doesn't exist in the library returns None."""
+    assert PaperSizeLibrary.get_paper_size("my special paper name") is None

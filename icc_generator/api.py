@@ -13,7 +13,7 @@ from typing import Union
 from icc_generator import logger
 
 
-HERE = os.path.abspath(os.path.dirname(__file__))
+HERE = pathlib.Path(__file__).parent.absolute()
 
 
 class PaperSize(object):
@@ -53,9 +53,8 @@ class PaperSize(object):
         """
         if not isinstance(name, str):
             raise TypeError(
-                "{}.name should be a str, not {}".format(
-                    self.__class__.__name__, name.__class__.__name__
-                )
+                f"{self.__class__.__name__}.name should be a str, "
+                f"not {name.__class__.__name__}"
             )
         self._name = name
 
@@ -77,15 +76,13 @@ class PaperSize(object):
         """
         if not isinstance(width, (float, int)):
             raise TypeError(
-                "{}.width should be a int or float, not {}".format(
-                    self.__class__.__name__, width.__class__.__name__
-                )
+                f"{self.__class__.__name__}.width should be a int or float, "
+                f"not {width.__class__.__name__}"
             )
         if width <= 0:
             raise ValueError(
-                "{}.width should be a positive value, not {}".format(
-                    self.__class__.__name__, width
-                )
+                f"{self.__class__.__name__}.width should be a positive value, "
+                f"not {width}"
             )
         self._width = width
 
@@ -107,15 +104,13 @@ class PaperSize(object):
         """
         if not isinstance(height, (float, int)):
             raise TypeError(
-                "{}.height should be a int or float, not {}".format(
-                    self.__class__.__name__, height.__class__.__name__
-                )
+                f"{self.__class__.__name__}.height should be a int or float, "
+                f"not {height.__class__.__name__}"
             )
         if height <= 0:
             raise ValueError(
-                "{}.height should be a positive value, not {}".format(
-                    self.__class__.__name__, height
-                )
+                f"{self.__class__.__name__}.height should be a positive value, "
+                f"not {height}"
             )
         self._height = height
 
@@ -133,23 +128,21 @@ class PaperSize(object):
         """Setter for the size attr."""
         if not isinstance(size, (list, tuple)):
             raise TypeError(
-                "{}.size should be a list, not {}".format(
-                    self.__class__.__name__, size.__class__.__name__
-                )
+                f"{self.__class__.__name__}.size should be a list, "
+                f"not {size.__class__.__name__}"
             )
 
         if len(size) != 2:
             raise ValueError(
-                "{}.size should be a list or tuple of 2 items, not {}".format(
-                    self.__class__.__name__, len(size)
-                )
+                f"{self.__class__.__name__}.size should be a list or tuple of 2 items, "
+                f"not {len(size)}"
             )
 
         self.width = size[0]
         self.height = size[1]
 
     @property
-    def area(self):
+    def area(self) -> Union[int, float]:
         """Return the area in mm2.
 
         Returns:
@@ -170,7 +163,7 @@ class PaperSize(object):
             and self.height == other.height
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """overriden hash value."""
         return hash(self.name) + 2 * hash(self.width) + 3 * hash(self.height)
 
@@ -209,8 +202,22 @@ class PaperSizeLibrary(object):
     }
 
     @classmethod
-    def get_paper_size(cls, paper_size_name):
-        """Return paper size."""
+    def get_paper_size(cls, paper_size_name) -> Union[PaperSize, None]:
+        """Return paper size.
+
+        Args:
+            paper_size_name (str): The paper size name.
+
+        Returns:
+            PaperSize: If the given paper size name exists in the library it returns the
+                PaperSize instance, otherwise returns None.
+        """
+        if not isinstance(paper_size_name, str):
+            raise TypeError(
+                "paper_size_name should be a str, "
+                f"not {paper_size_name.__class__.__name__}"
+            )
+
         return cls.paper_sizes.get(paper_size_name)
 
 
@@ -283,6 +290,7 @@ class ICCGenerator(object):
             ~/Library/ColorSync/Profiles/
 
     """
+
     NORMAL_DENSITY = "normal_density"
     HIGH_DENSITY = "high_density"
 
@@ -401,19 +409,19 @@ class ICCGenerator(object):
 
     def __init__(
         self,
-        printer_brand="Canon",
-        printer_model="iX6850",
-        paper_brand="Kodak",
-        paper_model="UPPP",
-        paper_finish="Glossy",
-        paper_size=None,
-        ink_brand="CanonInk",
-        use_high_density_mode=True,
-        number_of_pages=1,
-        copyright_info="",
-        precondition_profile_path="",
-        output_commands=False,
-        gray_patch_count=128,
+        printer_brand: str = "Canon",
+        printer_model: str = "iX6850",
+        paper_brand: str = "Kodak",
+        paper_model: str = "UPPP",
+        paper_finish: str = "Glossy",
+        paper_size: Union[None, PaperSize] = None,
+        ink_brand: str = "CanonInk",
+        use_high_density_mode: bool = True,
+        number_of_pages: int = 1,
+        copyright_info: str = "",
+        precondition_profile_path: Union[str, pathlib.Path] = "",
+        output_commands: bool = False,
+        gray_patch_count: int = 128,
     ):
         self.output_commands = output_commands
 
@@ -480,24 +488,33 @@ class ICCGenerator(object):
 
         # The output path is defined by the Operating system
         system_name = platform.system().lower()
-        self.output_path = "~/.local/share/icc/"
+        self.output_path = pathlib.Path("~/.local/share/icc/").expanduser()
 
         if "win32" in system_name:
-            self.output_path = "%WINDIR%/System32/spool/drivers/color/"
+            self.output_path = pathlib.Path(
+                os.path.expandvars("%WINDIR%/System32/spool/drivers/color/")
+            )
         elif "darwin" in system_name:
-            self.output_path = "~/Library/ColorSync/Profiles/"
+            self.output_path = (
+                pathlib.Path("~/Library/ColorSync/Profiles/").expanduser()
+            )
 
     def save_settings(self, path=None):
-        """saves the settings to the given path
+        """Save the settings to the given path.
 
-        :param str path: The settings file path. If skipped the profile path will be
-            used along with the profile name to generate a proper profile path.
+        Args:
+            path (Union[str, pathlib.Path]): The settings file path. If skipped the
+                profile path will be used along with the profile name to generate a
+                proper profile path.
         """
         if not path:
-            path = os.path.join(self.profile_path, "%s.json" % self.profile_name)
+            path = self.profile_path / f"{self.profile_name}.json"
 
-        if not isinstance(path, str):
+        if not isinstance(path, (str, pathlib.Path)):
             raise TypeError("Please specify a valid path")
+
+        if isinstance(path, str):
+            path = pathlib.Path(path)
 
         data = {
             "ink_brand": self.ink_brand,
@@ -512,23 +529,28 @@ class ICCGenerator(object):
         }
 
         # create the folder
-        norm_path = os.path.expandvars(os.path.expanduser(path))
-        os.makedirs(os.path.dirname(norm_path), exist_ok=True)
+        os.makedirs(path.parent, exist_ok=True)
 
-        logger.info(f"Saving profile settings to: {norm_path}")
-        with open(norm_path, "w+") as f:
+        logger.info(f"Saving profile settings to: {path.resolve()}")
+        with open(path, "w+") as f:
             json.dump(data, f)
 
     def load_settings(self, path):
-        """loads the settings from the given path"""
-        if not path or not isinstance(path, str):
+        """Load the settings from the given path.
+
+        Args:
+            path (Union[str, pathlib.Path]): The path to load the data from.
+        """
+        if not path or not isinstance(path, (str, pathlib.Path)):
             raise TypeError("Please specify a valid path")
 
-        norm_path = os.path.expandvars(os.path.expanduser(path))
-        if not os.path.exists(norm_path):
-            raise RuntimeError("File does not exist!: %s" % path)
+        if isinstance(path, str):
+            path = pathlib.Path(path)
 
-        with open(norm_path, "r") as f:
+        if not path.exists():
+            raise RuntimeError(f"File does not exist!: {path}")
+
+        with open(path, "r") as f:
             data = json.load(f)
 
         self.ink_brand = data["ink_brand"]
@@ -550,8 +572,8 @@ class ICCGenerator(object):
         """getter for the printer_brand attribute"""
         if not printer_brand or not isinstance(printer_brand, str):
             raise TypeError(
-                "%s.printer_brand should be a str, not %s"
-                % (self.__class__.__name__, printer_brand.__class__.__name__)
+                f"{self.__class__.__name__}.printer_brand should be a str, "
+                f"not {printer_brand.__class__.__name__}"
             )
         self._printer_brand = printer_brand
 
@@ -564,8 +586,8 @@ class ICCGenerator(object):
         """getter for the printer_model attribute"""
         if not printer_model or not isinstance(printer_model, str):
             raise TypeError(
-                "%s.printer_model should be a str, not %s"
-                % (self.__class__.__name__, printer_model.__class__.__name__)
+                f"{self.__class__.__name__}.printer_model should be a str, "
+                f"not {printer_model.__class__.__name__}"
             )
         self._printer_model = printer_model
 
@@ -578,8 +600,8 @@ class ICCGenerator(object):
         """getter for the paper_brand attribute"""
         if not paper_brand or not isinstance(paper_brand, str):
             raise TypeError(
-                "%s.paper_brand should be a str, not %s"
-                % (self.__class__.__name__, paper_brand.__class__.__name__)
+                f"{self.__class__.__name__}.paper_brand should be a str, "
+                f"not {paper_brand.__class__.__name__}"
             )
         self._paper_brand = paper_brand
 
@@ -592,8 +614,8 @@ class ICCGenerator(object):
         """getter for the paper_model attribute"""
         if not paper_model or not isinstance(paper_model, str):
             raise TypeError(
-                "%s.paper_model should be a str, not %s"
-                % (self.__class__.__name__, paper_model.__class__.__name__)
+                f"{self.__class__.__name__}.paper_model should be a str, "
+                f"not {paper_model.__class__.__name__}"
             )
         self._paper_model = paper_model
 
@@ -606,8 +628,8 @@ class ICCGenerator(object):
         """getter for the paper_finish attribute"""
         if not paper_finish or not isinstance(paper_finish, str):
             raise TypeError(
-                "%s.paper_finish should be a str, not %s"
-                % (self.__class__.__name__, paper_finish.__class__.__name__)
+                f"{self.__class__.__name__}.paper_finish should be a str, "
+                f"not {paper_finish.__class__.__name__}"
             )
         self._paper_finish = paper_finish
 
@@ -620,8 +642,8 @@ class ICCGenerator(object):
         """getter for the paper_size attribute"""
         if not paper_size or not isinstance(paper_size, PaperSize):
             raise TypeError(
-                "%s.paper_size should be a PaperSize instance, not %s"
-                % (self.__class__.__name__, paper_size.__class__.__name__)
+                f"{self.__class__.__name__}.paper_size should be a PaperSize instance, "
+                f"not {paper_size.__class__.__name__}"
             )
         self._paper_size = paper_size
 
@@ -634,8 +656,8 @@ class ICCGenerator(object):
         """getter for the ink_brand attribute"""
         if not ink_brand or not isinstance(ink_brand, str):
             raise TypeError(
-                "%s.ink_brand should be a str, not %s"
-                % (self.__class__.__name__, ink_brand.__class__.__name__)
+                f"{self.__class__.__name__}.ink_brand should be a str, "
+                f"not {ink_brand.__class__.__name__}"
             )
         self._ink_brand = ink_brand
 
@@ -648,8 +670,8 @@ class ICCGenerator(object):
         """getter for the use_high_density_mode attribute"""
         if not isinstance(use_high_density_mode, bool):
             raise TypeError(
-                "%s.use_high_density_mode should be a bool (True or False), not %s"
-                % (self.__class__.__name__, use_high_density_mode.__class__.__name__)
+                f"{self.__class__.__name__}.use_high_density_mode should be a bool "
+                f"(True or False), not {use_high_density_mode.__class__.__name__}"
             )
         self._use_high_density_mode = use_high_density_mode
 
@@ -662,8 +684,8 @@ class ICCGenerator(object):
         """getter for the number_of_pages attribute"""
         if not number_of_pages or not isinstance(number_of_pages, int):
             raise TypeError(
-                "%s.number_of_pages should be a int, not %s"
-                % (self.__class__.__name__, number_of_pages.__class__.__name__)
+                f"{self.__class__.__name__}.number_of_pages should be a int, "
+                f"not {number_of_pages.__class__.__name__}"
             )
         self._number_of_pages = number_of_pages
 
@@ -676,8 +698,8 @@ class ICCGenerator(object):
         """getter for the copyright_info attribute"""
         if not isinstance(copyright_info, str):
             raise TypeError(
-                "%s.copyright_info should be a str, not %s"
-                % (self.__class__.__name__, copyright_info.__class__.__name__)
+                f"{self.__class__.__name__}.copyright_info should be a str, "
+                f"not {copyright_info.__class__.__name__}"
             )
         self._copyright_info = copyright_info
 
@@ -690,39 +712,42 @@ class ICCGenerator(object):
         """getter for the precondition_profile_path attribute"""
         if not isinstance(precondition_profile_path, str):
             raise TypeError(
-                "%s.precondition_profile_path should be a str, not %s"
-                % (
-                    self.__class__.__name__,
-                    precondition_profile_path.__class__.__name__,
-                )
+                f"{self.__class__.__name__}.precondition_profile_path should be a str, "
+                f"not {precondition_profile_path.__class__.__name__}"
             )
         self._precondition_profile_path = precondition_profile_path
 
     @property
     def profile_path(self):
-        """getter for the profile_path attribute"""
+        """Return the profile_path attribute.
+
+        Returns:
+            pathlib.Path: The rendered profile path value.
+        """
         # update the output path according to the OS
-        return self._profile_path_template.format(
-            printer_brand=self.printer_brand,
-            printer_model=self.printer_model,
-            paper_brand=self.paper_brand,
-            paper_model=self.paper_model,
-            paper_finish=self.paper_finish,
-            paper_size=self.paper_size.name,
-            ink_brand=self.ink_brand,
-            profile_date=self.profile_date,
-            profile_time=self.profile_time,
-        )
+        return pathlib.Path(
+            self._profile_path_template.format(
+                printer_brand=self.printer_brand,
+                printer_model=self.printer_model,
+                paper_brand=self.paper_brand,
+                paper_model=self.paper_model,
+                paper_finish=self.paper_finish,
+                paper_size=self.paper_size.name,
+                ink_brand=self.ink_brand,
+                profile_date=self.profile_date,
+                profile_time=self.profile_time,
+            )
+        ).expanduser()
 
     @property
     def profile_absolute_path(self):
         """returns the absolute path of profile_path variable"""
-        return os.path.expandvars(os.path.expanduser(self.profile_path))
+        return self.profile_path.resolve()
 
     @property
     def profile_absolute_full_path(self):
         """returns the absolute path of profile_path variable"""
-        return os.path.join(self.profile_absolute_path, self.profile_name)
+        return self.profile_absolute_path / self.profile_name
 
     def render_profile_name(self):
         return self.profile_name_template.format(
@@ -783,8 +808,8 @@ class ICCGenerator(object):
         """
         if not gray_patch_count or not isinstance(gray_patch_count, int):
             raise TypeError(
-                "%s.gray_patch_count should be an int, not %s"
-                % (self.__class__.__name__, gray_patch_count.__class__.__name__)
+                f"{self.__class__.__name__}.gray_patch_count should be an int, "
+                f"not {gray_patch_count.__class__.__name__}"
             )
 
         self._gray_patch_count = gray_patch_count
@@ -835,18 +860,18 @@ class ICCGenerator(object):
             "2",
             "-G",
             "-g",
-            "%s" % self.gray_patch_count,
+            f"{self.gray_patch_count}",
             "-f",
-            "%s" % self.patch_count,
+            f"{self.patch_count}",
         ]
         if self.precondition_profile_path:
             command += ["-c", self.precondition_profile_path]
-        command += [self.profile_absolute_full_path]
+        command += [str(self.profile_absolute_full_path)]
 
         # first call the targen command
         # yield from self.run_external_process(command)
         if self.output_commands:
-            print("command: %s" % " ".join(command))
+            print("command: {}".format(" ".join(command)))
         for output in self.run_external_process(command):
             print(output)
 
@@ -871,16 +896,16 @@ class ICCGenerator(object):
             "-L",
             "-p",
             "{:0.1f}x{:0.1f}".format(*self.paper_size.size),
-            self.profile_absolute_full_path,
+            str(self.profile_absolute_full_path),
         ]
 
         self.update_tif_files()
 
         # first call the targen command
-        # print("generate_tif_files command: %s" % ' '.join(command))
+        # print("generate_tif_files command: {}".format(' '.join(command)))
         # yield from self.run_external_process(command)
         if self.output_commands:
-            print("command: %s" % " ".join(command))
+            print("command: {}".format(" ".join(command)))
         for output in self.run_external_process(command):
             print(output)
 
@@ -890,19 +915,14 @@ class ICCGenerator(object):
         self.tif_files = []
         if self.number_of_pages == 1:
             self.tif_files.append(
-                os.path.expanduser(
-                    os.path.join(self.profile_path, "%s.tif" % self.profile_name)
-                )
+                (self.profile_path / f"{self.profile_name}.tif").resolve()
             )
         else:
             for i in range(self.number_of_pages):
                 self.tif_files.append(
-                    os.path.expanduser(
-                        os.path.join(
-                            self.profile_path,
-                            "%s_%02i.tif" % (self.profile_name, i + 1),
-                        )
-                    )
+                    (
+                        self.profile_path / f"{self.profile_name}_{i + 1:02}.tif"
+                    ).resolve()
                 )
 
     def print_charts(self):
@@ -938,7 +958,7 @@ class ICCGenerator(object):
             ] + self.tif_files
 
         if self.output_commands:
-            print("command: %s" % " ".join(command))
+            print("command: {}".format(" ".join(command)))
         for output in self.run_external_process(command):
             print(output)
 
@@ -970,14 +990,11 @@ class ICCGenerator(object):
         if resume:
             command += ["-r"]
 
-        command += [self.profile_absolute_full_path]
+        command += [str(self.profile_absolute_full_path)]
 
         # first call the targen command
-
-        # os.system(" ".join(command))
-        # yield from self.run_external_process(command, shell=True)
         if self.output_commands:
-            print("command: %s" % " ".join(command))
+            print("command: {}".format(" ".join(command)))
         for output in self.run_external_process(command, shell=True):
             print(output)
 
@@ -993,23 +1010,23 @@ class ICCGenerator(object):
             "-qh",
             "-r0.5",
             "-S",
-            os.path.join(HERE, "../data/AdobeRGB.icc"),
+            str(HERE.parent / "data" / "AdobeRGB.icc"),
             "-cmt",
             "-dpp",
             "-Zr",
             "-Zm",
-            "-D%s" % self.profile_name,
+            f"-D{self.profile_name}",
         ]
 
         if self.copyright_info:
-            command.append("-C%s" % self.copyright_info)
+            command.append(f"-C{self.copyright_info}")
 
-        command += [self.profile_absolute_full_path]
+        command += [str(self.profile_absolute_full_path)]
 
         # call the command
         # yield from self.run_external_process(command)
         if self.output_commands:
-            print("command: %s" % " ".join(command))
+            print("command: {}".format(" ".join(command)))
         for output in self.run_external_process(command):
             print(output)
 
@@ -1031,20 +1048,20 @@ class ICCGenerator(object):
         if sort_by_de:
             command.append("-s")
 
-        command.append("%s.ti3" % self.profile_absolute_full_path)
+        command.append(f"{self.profile_absolute_full_path}.ti3")
 
         system_name = platform.system().lower()
         if "win32" in system_name:
             # windows uses *.icm file extension
-            command.append("%s.icm" % self.profile_absolute_full_path)
+            command.append(f"{self.profile_absolute_full_path}.icm")
         else:
             # OSX and Linux uses *.icc file extension
-            command.append("%s.icc" % self.profile_absolute_full_path)
+            command.append(f"{self.profile_absolute_full_path}.icc")
 
         # call the command
         # yield from self.run_external_process(command)
         if self.output_commands:
-            print("command: %s" % " ".join(command))
+            print("command: {}".format(" ".join(command)))
         for output in self.run_external_process(command):
             print(output)
 
@@ -1061,18 +1078,13 @@ class ICCGenerator(object):
             ~/Library/ColorSync/Profiles/
         """
         # check if the profile is not generated yet
-        icc_profile_absolute_full_path = "{}.icc".format(
-            self.profile_absolute_full_path
+        icc_profile_absolute_full_path = self.profile_absolute_full_path.with_suffix(
+            ".icc"
         )
-        if not os.path.exists(icc_profile_absolute_full_path):
+        if not icc_profile_absolute_full_path.exists():
             raise RuntimeError("ICC file doesn't exist, please generate it first!")
 
-        profile_install_path = os.path.expandvars(
-            os.path.expanduser(
-                os.path.join(self.output_path, "%s.icc" % self.profile_name)
-            )
-        )
-
+        profile_install_path = self.output_path / f"{self.profile_name}.icc"
         try:
             shutil.copy2(icc_profile_absolute_full_path, profile_install_path)
         except Exception:
@@ -1089,13 +1101,15 @@ class ICCGenerator(object):
         image_profile="AdobeRGB",
         intent="r",
     ):
-        """Apply color correction to the given image. Accepts TIFF or JPEG files.
+        """Apply color correction to the given image.
+
+        Accepts TIFF or JPEG files.
 
         cctiff
-        ~/.local/share/icc/Canon_iX6850_Generic_Plain_Matte_A4_CanonInk_20210207_1402.icc
-        ~/Documents/development/ICCGenerator/sRGB.icc
-        Primary_Colors_3.jpeg
-        Primary_Colors_3_corrected2.jpeg
+         ~/.local/share/icc/Canon_iX6850_Generic_Plain_Matte_A4_CanonInk_20210207_1402.icc
+         ~/Documents/development/ICCGenerator/sRGB.icc
+         Primary_Colors_3.jpeg
+         Primary_Colors_3_corrected2.jpeg
 
         cctiff
           ~/Documents/development/ICCGenerator/sRGB-elle-V2-srgbtrc.icc
@@ -1103,73 +1117,79 @@ class ICCGenerator(object):
           Primary_Colors_3.jpeg
           Primary_Colors_3_corrected.jpeg
 
-        :param str printer_profile_path: The path of the ICC/ICM file of the printer
-            profile.
-        :param str image_profile: Can be either "sRGB" or "AdobeRGB", default is
-            "AdobeRGB".
-        :param str input_image_path: The input JPG/TIFF image path.
-        :param str output_image_path: The output TIFF image path.
-        :param str intent: Rendering intent, one of the following:
+        Args:
+            printer_profile_path (Union[str, pathlib.Path]): The path of the ICC/ICM
+                file of the printer profile.
+            image_profile (Union[str, pathlib.Path]): Can be either "sRGB" or
+                "AdobeRGB", default is "AdobeRGB".
+            input_image_path (Union[str, pathlib.Path]): The input JPG/TIFF image path.
+            output_image_path (Uniton[str, pathlib.Path, None]): The output TIFF image
+                path. Can be set to None then a suitable path will be generated
+                automatically.
+            intent (str): Rendering intent, one of the following:
 
-          p = perceptual, r = relative colorimetric (default)
-          s = saturation, a = absolute colorimetric
-
-        :return:
+                p = perceptual, r = relative colorimetric (default)
+                s = saturation, a = absolute colorimetric
         """
         # ---------------------
         # Printer Profile Path
-        if printer_profile_path is None or not isinstance(printer_profile_path, str):
+        if printer_profile_path is None or not isinstance(
+            printer_profile_path, (str, pathlib.Path)
+        ):
             raise TypeError("Please specify a proper printer_profile_path!")
 
-        if not os.path.exists(
-            os.path.expandvars(os.path.expanduser(printer_profile_path))
-        ):
+        if isinstance(printer_profile_path, str):
+            printer_profile_path = pathlib.Path(printer_profile_path)
+
+        if not printer_profile_path.exists():
             raise ValueError(
-                "printer_profile_path doesn't exists: %s" % printer_profile_path
+                f"printer_profile_path doesn't exists: {printer_profile_path}"
             )
 
-        printer_profile_extension = os.path.splitext(printer_profile_path)[-1]
-        if printer_profile_extension.lower() not in [".icc", ".icm"]:
+        if printer_profile_path.suffix.lower() not in [".icc", ".icm"]:
             raise ValueError(
-                "printer_profile_path should be a valid ICC/ICM file: %s"
-                % printer_profile_path
+                f"printer_profile_path should be a valid ICC/ICM file: "
+                f"{printer_profile_path}"
             )
 
         # ---------------------
         # Input Image Path
-        if not isinstance(input_image_path, str):
+        if not isinstance(input_image_path, (str, pathlib.Path)):
             raise TypeError("Please specify a proper input_image_path!")
 
-        if not os.path.exists(os.path.expandvars(os.path.expanduser(input_image_path))):
-            raise ValueError("input_image_path doesn't exists: %s" % input_image_path)
+        if isinstance(input_image_path, str):
+            input_image_path = pathlib.Path(input_image_path)
 
-        input_image_extension = os.path.splitext(input_image_path)[-1]
-        if input_image_extension.lower() not in [".jpg", ".tif", ".tiff"]:
+        if not input_image_path.exists():
+            raise ValueError(f"input_image_path doesn't exists: {input_image_path}")
+
+        if input_image_path.suffix.lower() not in [".jpg", ".tif", ".tiff"]:
             raise ValueError(
-                "input_image_path should be a valid JPG/TIF file: %s" % input_image_path
+                f"input_image_path should be a valid JPG/TIF file: {input_image_path}"
             )
 
         if not output_image_path:
             # generate the output_image_path from input_image_path
-            dir_name = os.path.dirname(input_image_path)
-            base_name_wo_ext, ext = os.path.splitext(input_image_path)
+            dir_name = input_image_path.parent
+            base_name_wo_ext = input_image_path.stem
+            ext = input_image_path.suffix
             i = 1
             while i < 100000:
-                output_image_path = os.path.join(
-                    dir_name, "%s_corrected_%s%s" % (base_name_wo_ext, i, ext)
-                )
-                if not os.path.exists(output_image_path):
+                output_image_path = dir_name / f"{base_name_wo_ext}_corrected_{i}{ext}"
+                if not output_image_path.exists():
                     break
                 i += 1
+        else:
+            if isinstance(output_image_path, str):
+                output_image_path = pathlib.Path(output_image_path)
 
-        if os.path.splitext(output_image_path)[-1].lower() not in [
+        if output_image_path.suffix.lower() not in [
             ".jpg",
             ".tif",
             ".tiff",
         ]:
             raise ValueError(
-                "output_image_path should be a valid JPG/TIF file: %s"
-                % output_image_path
+                f"output_image_path should be a valid JPG/TIF file: {output_image_path}"
             )
 
         # ---------------------
@@ -1179,23 +1199,19 @@ class ICCGenerator(object):
             intent = "r"
 
         if not isinstance(intent, str):
-            raise TypeError(
-                "intent should be a str, not %s" % intent.__class__.__name__
-            )
+            raise TypeError(f"intent should be a str, not {intent.__class__.__name__}")
 
         if intent not in ["p", "r", "s", "a"]:
-            raise ValueError("intent should be one of p, r, s, a, not %s" % intent)
+            raise ValueError(f"intent should be one of p, r, s, a, not {intent}")
 
         # ---------------------
         # Image Profile
         if image_profile is None:
             image_profile = "AdobeRGB"
 
-        if not isinstance(image_profile, str):
+        if not isinstance(image_profile, (str, pathlib.Path)):
             raise TypeError(
-                "image_profile should be one of sRGB or AdobeRGB, not {}".format(
-                    image_profile
-                )
+                f"image_profile should be one of sRGB or AdobeRGB, not {image_profile}"
             )
 
         image_profile = pathlib.Path(image_profile)
@@ -1203,13 +1219,10 @@ class ICCGenerator(object):
             base_name = image_profile.stem
             if base_name.lower() not in ["adobergb", "srgb"]:
                 raise ValueError(
-                    "image_profile should be one of sRGB or AdobeRGB, not {}".format(
-                        image_profile
-                    )
+                    f"image_profile should be one of sRGB or AdobeRGB, not "
+                    f"{image_profile}"
                 )
-            image_profile_path = os.path.normpath(
-                os.path.join(HERE, "..", "{}.icc".format(image_profile))
-            )
+            image_profile_path = HERE.parent / f"{image_profile}.icc"
         else:
             image_profile_path = image_profile
 
@@ -1220,10 +1233,10 @@ class ICCGenerator(object):
             "-i",
             intent,
             "-p",
-            image_profile_path,
-            printer_profile_path,
-            input_image_path,
-            output_image_path,
+            str(image_profile_path),
+            str(printer_profile_path),
+            str(input_image_path),
+            str(output_image_path),
         ]
 
         # call the command

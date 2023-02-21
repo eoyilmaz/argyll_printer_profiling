@@ -5,6 +5,7 @@ import datetime
 import json
 import logging
 import os
+import pathlib
 import platform
 import tempfile
 
@@ -904,7 +905,7 @@ def test_profile_path_default_value_is_properly_calculated():
 
     assert icc_gen.profile_date == date_str
     assert icc_gen.profile_time == time_str
-    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
+    profile_path = pathlib.Path(f"~/.cache/ICCGenerator/Canon_iX6850/{date_str}").expanduser()
     assert icc_gen.profile_path == profile_path
 
 
@@ -926,8 +927,8 @@ def test_profile_absolute_path_is_properly_calculated():
 
     assert icc_gen.profile_date == date_str
     assert icc_gen.profile_time == time_str
-    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
-    assert icc_gen.profile_absolute_path == os.path.expanduser(profile_path)
+    profile_path = pathlib.Path(f"~/.cache/ICCGenerator/Canon_iX6850/{date_str}").expanduser()
+    assert icc_gen.profile_absolute_path == profile_path
 
 
 def test_profile_absolute_path_is_is_read_only():
@@ -939,9 +940,9 @@ def test_profile_absolute_path_is_is_read_only():
 
     assert icc_gen.profile_date == date_str
     assert icc_gen.profile_time == time_str
-    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
+    profile_path = pathlib.Path(f"~/.cache/ICCGenerator/Canon_iX6850/{date_str}").expanduser()
     with pytest.raises(AttributeError) as cm:
-        icc_gen.profile_absolute_path = os.path.expanduser(profile_path)
+        icc_gen.profile_absolute_path = profile_path
 
     assert str(cm.value) == "can't set attribute 'profile_absolute_path'"
 
@@ -955,10 +956,8 @@ def test_profile_absolute_full_path_is_properly_calculated():
 
     assert icc_gen.profile_date == date_str
     assert icc_gen.profile_time == time_str
-    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
-    assert icc_gen.profile_absolute_full_path == os.path.join(
-        os.path.expandvars(os.path.expanduser(profile_path)), icc_gen.profile_name
-    )
+    profile_path = pathlib.Path(f"~/.cache/ICCGenerator/Canon_iX6850/{date_str}").expanduser()
+    assert icc_gen.profile_absolute_full_path == profile_path / icc_gen.profile_name
 
 
 def test_profile_absolute_full_path_is_is_read_only():
@@ -970,9 +969,9 @@ def test_profile_absolute_full_path_is_is_read_only():
 
     assert icc_gen.profile_date == date_str
     assert icc_gen.profile_time == time_str
-    profile_path = "~/.cache/ICCGenerator/Canon_iX6850/%s" % date_str
+    profile_path = pathlib.Path(f"~/.cache/ICCGenerator/Canon_iX6850/{date_str}").expanduser()
     with pytest.raises(AttributeError) as cm:
-        icc_gen.profile_absolute_full_path = os.path.expanduser(profile_path)
+        icc_gen.profile_absolute_full_path = profile_path
 
     assert str(cm.value) == "can't set attribute 'profile_absolute_full_path'"
 
@@ -987,7 +986,7 @@ def test_generate_target_creates_the_output_folder(file_collector):
     icc_gen.paper_size = PaperSizeLibrary.A4
     file_collector.append(icc_gen.profile_absolute_path)
     icc_gen.generate_target()
-    assert os.path.exists(os.path.expanduser(os.path.join(icc_gen.output_path)))
+    assert icc_gen.output_path.exists()
 
 
 def test_generate_target_generates_ti_file(file_collector):
@@ -1000,10 +999,47 @@ def test_generate_target_generates_ti_file(file_collector):
     icc_gen.paper_size = PaperSizeLibrary.A4
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
-    expected_path = os.path.expanduser(
-        os.path.join(icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, ".ti1"))
-    )
-    assert os.path.exists(expected_path)
+    assert (icc_gen.profile_path / f"{icc_gen.profile_name}.ti1").exists()
+
+
+def test_generate_target_with_precondition_profile_arg(file_collector, patch_run_external_process):
+    """generate_target will generate ti file."""
+    commands = patch_run_external_process
+    precondition_profile_path = "pre_condition_profile_path.icc"
+    icc_gen = ICCGenerator(precondition_profile_path=precondition_profile_path)
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 1
+    icc_gen.paper_size = PaperSizeLibrary.A4
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.generate_target()
+    assert precondition_profile_path in commands[-1]
+
+
+def test_generate_target_with_precondition_profile_attr(file_collector, patch_run_external_process):
+    """generate_target will generate ti file."""
+    commands = patch_run_external_process
+    precondition_profile_path = "pre_condition_profile_path.icc"
+    icc_gen = ICCGenerator()
+    icc_gen.precondition_profile_path = precondition_profile_path
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 1
+    icc_gen.paper_size = PaperSizeLibrary.A4
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.generate_target()
+    assert precondition_profile_path in commands[-1]
+
+
+def test_generate_target_without_precondition_profile_attr(file_collector, patch_run_external_process):
+    """generate_target will generate ti file."""
+    commands = patch_run_external_process
+    precondition_profile_path = "pre_condition_profile_path.icc"
+    icc_gen = ICCGenerator()
+    # set it to use only one A4 page
+    icc_gen.number_of_pages = 1
+    icc_gen.paper_size = PaperSizeLibrary.A4
+    file_collector.append(icc_gen.profile_path)
+    icc_gen.generate_target()
+    assert precondition_profile_path not in commands[-1]
 
 
 def test_generate_tif_files_will_generate_tif_files_from_target_file(file_collector):
@@ -1017,17 +1053,9 @@ def test_generate_tif_files_will_generate_tif_files_from_target_file(file_collec
     file_collector.append(icc_gen.profile_path)
     icc_gen.generate_target()
     icc_gen.generate_tif()
-    profile_absolute_full_path = os.path.expanduser(
-        os.path.join(icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, ".tif"))
-    )
-    assert os.path.exists(profile_absolute_full_path)
-    assert not os.path.exists(
-        os.path.expanduser(
-            os.path.join(
-                icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, "_02.tif")
-            )
-        )
-    )
+    profile_absolute_full_path = icc_gen.profile_path / f"{icc_gen.profile_name}.tif"
+    assert profile_absolute_full_path.exists()
+    assert not (icc_gen.profile_path / f"{icc_gen.profile_name}_02.tif").exists()
 
 
 def test_generate_tif_files_will_generates_correct_amount_of_tif_files(file_collector):
@@ -1045,20 +1073,8 @@ def test_generate_tif_files_will_generates_correct_amount_of_tif_files(file_coll
     icc_gen.generate_target()
     icc_gen.generate_tif()
 
-    assert os.path.exists(
-        os.path.expanduser(
-            os.path.join(
-                icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, "_01.tif")
-            )
-        )
-    )
-    assert os.path.exists(
-        os.path.expanduser(
-            os.path.join(
-                icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, "_02.tif")
-            )
-        )
-    )
+    assert (icc_gen.profile_path / f"{icc_gen.profile_name}_01.tif").exists()
+    assert (icc_gen.profile_path / f"{icc_gen.profile_name}_02.tif").exists()
 
 
 def test_generate_tif_files_will_fill_tif_files_attr_single_page(file_collector):
@@ -1076,10 +1092,7 @@ def test_generate_tif_files_will_fill_tif_files_attr_single_page(file_collector)
     icc_gen.generate_target()
     icc_gen.generate_tif()
 
-    tif1 = os.path.expanduser(
-        os.path.join(icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, ".tif"))
-    )
-
+    tif1 = icc_gen.profile_path / f"{icc_gen.profile_name}.tif"
     assert icc_gen.tif_files[0] == tif1
 
 
@@ -1098,13 +1111,8 @@ def test_generate_tif_files_will_fill_tif_files_attr_more_than_one_page(file_col
     icc_gen.generate_target()
     icc_gen.generate_tif()
 
-    tif1 = os.path.expanduser(
-        os.path.join(icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, "_01.tif"))
-    )
-
-    tif2 = os.path.expanduser(
-        os.path.join(icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, "_02.tif"))
-    )
+    tif1 = icc_gen.profile_path / f"{icc_gen.profile_name}_01.tif"
+    tif2 = icc_gen.profile_path / f"{icc_gen.profile_name}_02.tif"
 
     assert icc_gen.tif_files[0] == tif1
     assert icc_gen.tif_files[1] == tif2
@@ -1125,13 +1133,8 @@ def test_generate_tif_files_will_clear_the_tif_files_list(file_collector):
     icc_gen.generate_target()
     icc_gen.generate_tif()
 
-    tif1 = os.path.expanduser(
-        os.path.join(icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, "_01.tif"))
-    )
-
-    tif2 = os.path.expanduser(
-        os.path.join(icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, "_02.tif"))
-    )
+    tif1 = icc_gen.profile_path / f"{icc_gen.profile_name}_01.tif"
+    tif2 = icc_gen.profile_path / f"{icc_gen.profile_name}_02.tif"
     assert len(icc_gen.tif_files) == 2
     assert icc_gen.tif_files[0] == tif1
     assert icc_gen.tif_files[1] == tif2
@@ -1143,10 +1146,7 @@ def test_generate_tif_files_will_clear_the_tif_files_list(file_collector):
     icc_gen.generate_target()
     icc_gen.generate_tif()
 
-    tif1 = os.path.expanduser(
-        os.path.join(icc_gen.profile_path, "%s%s" % (icc_gen.profile_name, ".tif"))
-    )
-
+    tif1 = icc_gen.profile_path / f"{icc_gen.profile_name}.tif"
     assert len(icc_gen.tif_files) == 1
     assert icc_gen.tif_files[0] == tif1
 
@@ -1389,18 +1389,12 @@ def test_install_profile_1(file_collector, patch_run_external_process):
     file_collector.append(icc_gen.profile_path)
 
     # create a dummy icc file
-    dummy_icc_profile_full_path = os.path.expandvars(
-        os.path.expanduser(
-            os.path.join(icc_gen.profile_path, "%s.icc" % icc_gen.profile_name)
-        )
-    )
-    os.makedirs(
-        os.path.expandvars(os.path.expanduser(icc_gen.profile_path)), exist_ok=True
-    )
-    assert os.path.expandvars(os.path.expanduser(icc_gen.profile_path))
+    dummy_icc_profile_full_path = icc_gen.profile_path / f"{icc_gen.profile_name}.icc"
+    os.makedirs(icc_gen.profile_path, exist_ok=True)
+    assert icc_gen.profile_path
     with open(dummy_icc_profile_full_path, "w+") as f:
         f.write("dummy icc file!!!")
-    assert os.path.exists(dummy_icc_profile_full_path)
+    assert dummy_icc_profile_full_path.exists()
     file_collector.append(dummy_icc_profile_full_path)
 
     icc_gen.install_profile()
@@ -1410,23 +1404,23 @@ def test_install_profile_1(file_collector, patch_run_external_process):
     profile_install_path = None
     system_name = platform.system().lower()
     if "win32" in system_name:
-        profile_install_path = os.path.expandvars(
-            "$WINDIR/System32spool/drivers/color/%s.icc" % icc_gen.profile_name
+        profile_install_path = pathlib.Path(
+            os.path.expandvars(
+                f"$WINDIR/System32spool/drivers/color/{icc_gen.profile_name}.icc"
+           )
         )
     elif "linux" in system_name:
-        profile_install_path = os.path.expandvars(
-            os.path.expanduser("~/.local/share/icc/%s.icc" % icc_gen.profile_name)
-        )
+        profile_install_path = pathlib.Path(
+            f"~/.local/share/icc/{icc_gen.profile_name}.icc"
+        ).expanduser()
     elif "darwin" in system_name :
-        profile_install_path = os.path.expandvars(
-            os.path.expanduser("~/Library/ColorSync/Profiles/{}.icc".format(
-                icc_gen.profile_name
-            ))
-        )
+        profile_install_path = pathlib.Path(
+            f"~/Library/ColorSync/Profiles/{icc_gen.profile_name}.icc"
+        ).expanduser()
 
     assert profile_install_path is not None
     file_collector.append(profile_install_path)
-    assert os.path.exists(os.path.expandvars(profile_install_path))
+    assert profile_install_path.exists()
 
 
 def test_install_profile_2(file_collector, patch_run_external_process):
@@ -1454,19 +1448,21 @@ def test_default_log_level_is_warning(file_collector):
 def test_output_path_for_windows(set_to_windows):
     """output_path variable is correctly set for Windows."""
     icc_gen = ICCGenerator()
-    assert icc_gen.output_path == "%WINDIR%/System32/spool/drivers/color/"
+    assert icc_gen.output_path == pathlib.Path(
+        os.path.expandvars("%WINDIR%/System32/spool/drivers/color/")
+    )
 
 
 def test_output_path_for_linux(set_to_linux):
     """output_path variable is correctly set for Linux."""
     icc_gen = ICCGenerator()
-    assert icc_gen.output_path == "~/.local/share/icc/"
+    assert icc_gen.output_path == pathlib.Path("~/.local/share/icc/").expanduser()
 
 
 def test_output_path_for_macos(set_to_macos):
     """output_path variable is correctly set for macOS."""
     icc_gen = ICCGenerator()
-    assert icc_gen.output_path == "~/Library/ColorSync/Profiles/"
+    assert icc_gen.output_path == pathlib.Path("~/Library/ColorSync/Profiles/").expanduser()
 
 
 def test_color_correct_image_printer_profile_path_is_skipped(
@@ -1972,7 +1968,7 @@ def test_color_correct_image_image_profile_is_a_path_to_srgb_or_adobergb_file(
     file_collector.append(printer_profile_path)
     file_collector.append(input_image_path)
 
-    image_profile = os.path.normpath(os.path.join(HERE, "..", "sRGB.icc"))
+    image_profile = (HERE / ".." / "sRGB.icc").resolve()
     intent = "r"
 
     ICCGenerator.color_correct_image(
@@ -1990,7 +1986,7 @@ def test_color_correct_image_image_profile_is_a_path_to_srgb_or_adobergb_file(
         "sRGB" in arg for arg in patch_run_external_process_class_method_version[0]
     )
     assert any(
-        image_profile in arg
+        str(image_profile.resolve()) in arg
         for arg in patch_run_external_process_class_method_version[0]
     )
 
@@ -1998,26 +1994,18 @@ def test_color_correct_image_image_profile_is_a_path_to_srgb_or_adobergb_file(
 def test_save_settings_path_is_skipped(file_collector):
     """profile_path used if path arg value is skipped."""
     icc_gen = ICCGenerator()
-    settings_file_path = os.path.join(
-        icc_gen.profile_path, "%s.json" % icc_gen.profile_name
-    )
-
+    settings_file_path = icc_gen.profile_path / f"{icc_gen.profile_name}.json"
     file_collector.append(settings_file_path)
-
-    assert not os.path.exists(os.path.expanduser(settings_file_path))
+    assert not settings_file_path.exists()
     icc_gen.save_settings()
-    assert os.path.exists(os.path.expanduser(settings_file_path))
+    assert settings_file_path.exists()
 
 
 def test_save_settings_path_is_none(file_collector):
     """profile_path used if path arg value is None."""
     icc_gen = ICCGenerator()
-    settings_file_path = os.path.join(
-        icc_gen.profile_path, "%s.json" % icc_gen.profile_name
-    )
-
+    settings_file_path = icc_gen.profile_path / f"{icc_gen.profile_name}.json"
     file_collector.append(settings_file_path)
-
     assert not os.path.exists(os.path.expanduser(settings_file_path))
     icc_gen.save_settings(path=None)
     assert os.path.exists(os.path.expanduser(settings_file_path))
@@ -2028,7 +2016,6 @@ def test_save_settings_path_is_not_a_str():
     icc_gen = ICCGenerator()
     with pytest.raises(TypeError) as cm:
         icc_gen.save_settings(1)
-
     assert str(cm.value) == "Please specify a valid path"
 
 

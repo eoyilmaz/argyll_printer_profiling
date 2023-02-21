@@ -206,6 +206,13 @@ def test_size_accepts_mixed_data_of_int_and_float(width, height, size_value):
     assert height == paper_size.height
 
 
+def test_size_only_accepts_list_or_tuple():
+    """setting size to something other than a list or tuple raises TypeError."""
+    paper_size = PaperSize(name="Legal", width=215.9, height=355.6)
+    with pytest.raises(TypeError):
+        paper_size.size = "this is not a list or tuple"
+
+
 @pytest.mark.parametrize(
     "test_value",
     [
