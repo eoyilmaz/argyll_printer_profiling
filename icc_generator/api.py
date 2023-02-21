@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""The API of the library."""
 
 import datetime
 import json
@@ -50,6 +51,9 @@ class PaperSize(object):
 
         Args:
             name (str): The name value.
+
+        Raises:
+            TypeError: If the given name arg value is not a str.
         """
         if not isinstance(name, str):
             raise TypeError(
@@ -72,7 +76,11 @@ class PaperSize(object):
         """Set the width.
 
         Args:
-            width (int | float):
+            width (int | float): The width of the PaperSize instance in mm.
+
+        Raises:
+            TypeError: If the given width value is not a float or int.
+            ValueError: If the given width value is not a positive number.
         """
         if not isinstance(width, (float, int)):
             raise TypeError(
@@ -100,7 +108,11 @@ class PaperSize(object):
         """Set the height.
 
         Args:
-            height (int | float):
+            height (int | float): The height of the PaperSize instance in mm.
+
+        Raises:
+            TypeError: If the given height value is not a float or int.
+            ValueError: If the given height value is not a positive number.
         """
         if not isinstance(height, (float, int)):
             raise TypeError(
@@ -116,7 +128,7 @@ class PaperSize(object):
 
     @property
     def size(self) -> tuple[float, float]:
-        """return the width and height as a list.
+        """Return the width and height as a list.
 
         Returns:
             List[float, float]: The width and height as a list.
@@ -125,7 +137,16 @@ class PaperSize(object):
 
     @size.setter
     def size(self, size: Union[list, tuple]):
-        """Setter for the size attr."""
+        """Set the size attr.
+
+        Args:
+            size (Union[List[Union[int, float]], Tuple[Union[int, float]]): The size as
+                a list of 2 items or tuple.
+
+        Raises:
+            TypeError: If the given size arg value is not a list or tuple.
+            ValueError: If the given size arg value has more than 2 items.
+        """
         if not isinstance(size, (list, tuple)):
             raise TypeError(
                 f"{self.__class__.__name__}.size should be a list, "
@@ -155,6 +176,9 @@ class PaperSize(object):
 
         Args:
             other (PaperSize): The other PaperSize instance.
+
+        Returns:
+            bool: True if the other PaperSize is equal to this one.
         """
         return (
             isinstance(other, PaperSize)
@@ -164,7 +188,11 @@ class PaperSize(object):
         )
 
     def __hash__(self) -> int:
-        """overriden hash value."""
+        """Override hash value.
+
+        Returns:
+            int: The hash value.
+        """
         return hash(self.name) + 2 * hash(self.width) + 3 * hash(self.height)
 
 
@@ -202,11 +230,14 @@ class PaperSizeLibrary(object):
     }
 
     @classmethod
-    def get_paper_size(cls, paper_size_name) -> Union[PaperSize, None]:
+    def get_paper_size(cls, paper_size_name: str) -> Union[PaperSize, None]:
         """Return paper size.
 
         Args:
             paper_size_name (str): The paper size name.
+
+        Raises:
+            TypeError: If the paper_size_name arg value is not a str.
 
         Returns:
             PaperSize: If the given paper size name exists in the library it returns the
@@ -495,17 +526,20 @@ class ICCGenerator(object):
                 os.path.expandvars("%WINDIR%/System32/spool/drivers/color/")
             )
         elif "darwin" in system_name:
-            self.output_path = (
-                pathlib.Path("~/Library/ColorSync/Profiles/").expanduser()
-            )
+            self.output_path = pathlib.Path(
+                "~/Library/ColorSync/Profiles/"
+            ).expanduser()
 
-    def save_settings(self, path=None):
+    def save_settings(self, path: Union[str, pathlib.Path] = None):
         """Save the settings to the given path.
 
         Args:
             path (Union[str, pathlib.Path]): The settings file path. If skipped the
                 profile path will be used along with the profile name to generate a
                 proper profile path.
+
+        Raises:
+            TypeError: If the given path doesn't exist.
         """
         if not path:
             path = self.profile_path / f"{self.profile_name}.json"
@@ -535,11 +569,16 @@ class ICCGenerator(object):
         with open(path, "w+") as f:
             json.dump(data, f)
 
-    def load_settings(self, path):
+    def load_settings(self, path: Union[str, pathlib.Path]):
         """Load the settings from the given path.
 
         Args:
             path (Union[str, pathlib.Path]): The path to load the data from.
+
+        Raises:
+            TypeError: If the given path arg value is not a str or pathlib.Path
+                instance.
+            RuntimeError: If the given path doesn't exist.
         """
         if not path or not isinstance(path, (str, pathlib.Path)):
             raise TypeError("Please specify a valid path")
@@ -564,12 +603,24 @@ class ICCGenerator(object):
         self.profile_time = data["profile_time"]
 
     @property
-    def printer_brand(self):
+    def printer_brand(self) -> str:
+        """Return printer_brand attribute value.
+
+        Returns:
+            str: The printer brand.
+        """
         return self._printer_brand
 
     @printer_brand.setter
-    def printer_brand(self, printer_brand):
-        """getter for the printer_brand attribute"""
+    def printer_brand(self, printer_brand: str):
+        """Set the printer_brand attribute.
+
+        Args:
+            printer_brand (str): The printer brand.
+
+        Raises:
+            TypeError: If the given printer_brand arg value is not a str.
+        """
         if not printer_brand or not isinstance(printer_brand, str):
             raise TypeError(
                 f"{self.__class__.__name__}.printer_brand should be a str, "
@@ -578,12 +629,24 @@ class ICCGenerator(object):
         self._printer_brand = printer_brand
 
     @property
-    def printer_model(self):
+    def printer_model(self) -> str:
+        """Return the printer_model attribute value.
+
+        Returns:
+            str: The printer_model attribute value.
+        """
         return self._printer_model
 
     @printer_model.setter
-    def printer_model(self, printer_model):
-        """getter for the printer_model attribute"""
+    def printer_model(self, printer_model: str):
+        """Set the printer_model attribute.
+
+        Args:
+            printer_model (str): The printer_model.
+
+        Raises:
+            TypeError: If the given printer_model arg value is not a str.
+        """
         if not printer_model or not isinstance(printer_model, str):
             raise TypeError(
                 f"{self.__class__.__name__}.printer_model should be a str, "
@@ -592,12 +655,24 @@ class ICCGenerator(object):
         self._printer_model = printer_model
 
     @property
-    def paper_brand(self):
+    def paper_brand(self) -> str:
+        """Return the paper_brand attribute value.
+
+        Returns:
+            str: The paper_brand attribute value.
+        """
         return self._paper_brand
 
     @paper_brand.setter
-    def paper_brand(self, paper_brand):
-        """getter for the paper_brand attribute"""
+    def paper_brand(self, paper_brand: str):
+        """Set the paper_brand attribute.
+
+        Args:
+            paper_brand (str): The paper_brand.
+
+        Raises:
+            TypeError: If the given paper_brand arg value is not a str.
+        """
         if not paper_brand or not isinstance(paper_brand, str):
             raise TypeError(
                 f"{self.__class__.__name__}.paper_brand should be a str, "
@@ -606,12 +681,24 @@ class ICCGenerator(object):
         self._paper_brand = paper_brand
 
     @property
-    def paper_model(self):
+    def paper_model(self) -> str:
+        """Return the paper_model attribute value.
+
+        Returns:
+            str: The paper_model attribute value.
+        """
         return self._paper_model
 
     @paper_model.setter
-    def paper_model(self, paper_model):
-        """getter for the paper_model attribute"""
+    def paper_model(self, paper_model: str):
+        """Set the paper_model attribute.
+
+        Args:
+            paper_model (str): The paper_model.
+
+        Raises:
+            TypeError: If the given paper_model arg value is not a str.
+        """
         if not paper_model or not isinstance(paper_model, str):
             raise TypeError(
                 f"{self.__class__.__name__}.paper_model should be a str, "
@@ -620,12 +707,24 @@ class ICCGenerator(object):
         self._paper_model = paper_model
 
     @property
-    def paper_finish(self):
+    def paper_finish(self) -> str:
+        """Return the paper_finish attribute value.
+
+        Returns:
+            str: The paper_finish attribute value.
+        """
         return self._paper_finish
 
     @paper_finish.setter
-    def paper_finish(self, paper_finish):
-        """getter for the paper_finish attribute"""
+    def paper_finish(self, paper_finish: str):
+        """Set the paper_finish attribute.
+
+        Args:
+            paper_finish (str): The paper finish (i.e Glossy, Matte).
+
+        Raises:
+            TypeError: If the given paper_finish arg value is not a str.
+        """
         if not paper_finish or not isinstance(paper_finish, str):
             raise TypeError(
                 f"{self.__class__.__name__}.paper_finish should be a str, "
@@ -634,12 +733,25 @@ class ICCGenerator(object):
         self._paper_finish = paper_finish
 
     @property
-    def paper_size(self):
+    def paper_size(self) -> PaperSize:
+        """Return the paper_size attribute value.
+
+        Returns:
+            PaperSize: The paper_size attribute value.
+        """
         return self._paper_size
 
     @paper_size.setter
-    def paper_size(self, paper_size):
-        """getter for the paper_size attribute"""
+    def paper_size(self, paper_size: PaperSize):
+        """Set the paper_size attribute.
+
+        Args:
+            paper_size (PaperSize): The paper size.
+
+        Raises:
+            TypeError: If the given paper_size attribute value is not a PaperSize
+                instance.
+        """
         if not paper_size or not isinstance(paper_size, PaperSize):
             raise TypeError(
                 f"{self.__class__.__name__}.paper_size should be a PaperSize instance, "
@@ -648,12 +760,24 @@ class ICCGenerator(object):
         self._paper_size = paper_size
 
     @property
-    def ink_brand(self):
+    def ink_brand(self) -> str:
+        """Return the ink_brand attribute value.
+
+        Returns:
+            str: The ink_brand attribute value.
+        """
         return self._ink_brand
 
     @ink_brand.setter
-    def ink_brand(self, ink_brand):
-        """getter for the ink_brand attribute"""
+    def ink_brand(self, ink_brand: str):
+        """Set the ink_brand attribute.
+
+        Args:
+            ink_brand (str): The ink brand.
+
+        Raises:
+            TypeError: If the given ink_brand arg value is not a str.
+        """
         if not ink_brand or not isinstance(ink_brand, str):
             raise TypeError(
                 f"{self.__class__.__name__}.ink_brand should be a str, "
@@ -663,11 +787,25 @@ class ICCGenerator(object):
 
     @property
     def use_high_density_mode(self):
+        """Return the use_high_density_mode attribute value.
+
+        Returns:
+            bool: The use_high_density_mode attribute value.
+        """
         return self._use_high_density_mode
 
     @use_high_density_mode.setter
-    def use_high_density_mode(self, use_high_density_mode):
-        """getter for the use_high_density_mode attribute"""
+    def use_high_density_mode(self, use_high_density_mode: bool):
+        """Set the use_high_density_mode attribute value.
+
+        Args:
+            use_high_density_mode (bool): If set to to True (default) higher resolution
+                for the patches will be used, which will increase the patches printed
+                per page, allowing less paper use for profiling.
+
+        Raises:
+            TypeError: If the given use_high_density_mode arg value is not a bool.
+        """
         if not isinstance(use_high_density_mode, bool):
             raise TypeError(
                 f"{self.__class__.__name__}.use_high_density_mode should be a bool "
@@ -676,12 +814,24 @@ class ICCGenerator(object):
         self._use_high_density_mode = use_high_density_mode
 
     @property
-    def number_of_pages(self):
+    def number_of_pages(self) -> int:
+        """Return the number_of_pages attribute value.
+
+        Returns:
+            int: The number_of_pages attribute value.
+        """
         return self._number_of_pages
 
     @number_of_pages.setter
-    def number_of_pages(self, number_of_pages):
-        """getter for the number_of_pages attribute"""
+    def number_of_pages(self, number_of_pages: int):
+        """Set the number_of_pages attribute.
+
+        Args:
+            number_of_pages (int): The number of pages.
+
+        Raises:
+            TypeError: If the given number_of_pages arg value is not an int.
+        """
         if not number_of_pages or not isinstance(number_of_pages, int):
             raise TypeError(
                 f"{self.__class__.__name__}.number_of_pages should be a int, "
@@ -690,12 +840,24 @@ class ICCGenerator(object):
         self._number_of_pages = number_of_pages
 
     @property
-    def copyright_info(self):
+    def copyright_info(self) -> str:
+        """Return the copyright_info attribute value.
+
+        Returns:
+            str: The copyright_info attribute value.
+        """
         return self._copyright_info
 
     @copyright_info.setter
-    def copyright_info(self, copyright_info):
-        """getter for the copyright_info attribute"""
+    def copyright_info(self, copyright_info: str):
+        """Set the copyright_info attribute.
+
+        Args:
+            copyright_info (str): The copyright info value.
+
+        Raises:
+            TypeError: If the given copyright_info is not a str.
+        """
         if not isinstance(copyright_info, str):
             raise TypeError(
                 f"{self.__class__.__name__}.copyright_info should be a str, "
@@ -704,12 +866,29 @@ class ICCGenerator(object):
         self._copyright_info = copyright_info
 
     @property
-    def precondition_profile_path(self):
+    def precondition_profile_path(self) -> Union[None, pathlib.Path]:
+        """Return the precondition_profile_path attribute value.
+
+        Returns:
+            Union[None, pathlib.Path]: The precondition_profile_path.
+        """
         return self._precondition_profile_path
 
     @precondition_profile_path.setter
-    def precondition_profile_path(self, precondition_profile_path):
-        """getter for the precondition_profile_path attribute"""
+    def precondition_profile_path(
+        self, precondition_profile_path: Union[str, pathlib.Path]
+    ):
+        """Set the precondition_profile_path attribute value.
+
+        Args:
+            precondition_profile_path (Union[str, pathlib.Path]): The precondition
+                profile path.
+
+        Raises:
+            TypeError: If the precondition_profile_path arg value is not a str or
+                pathlib.Path instance.
+        """
+        # TODO: precondition_profile_path can also be pathlib.Path
         if not isinstance(precondition_profile_path, str):
             raise TypeError(
                 f"{self.__class__.__name__}.precondition_profile_path should be a str, "
@@ -718,7 +897,7 @@ class ICCGenerator(object):
         self._precondition_profile_path = precondition_profile_path
 
     @property
-    def profile_path(self):
+    def profile_path(self) -> pathlib.Path:
         """Return the profile_path attribute.
 
         Returns:
@@ -740,16 +919,29 @@ class ICCGenerator(object):
         ).expanduser()
 
     @property
-    def profile_absolute_path(self):
-        """returns the absolute path of profile_path variable"""
+    def profile_absolute_path(self) -> pathlib.Path:
+        """Return the absolute path of profile_path variable.
+
+        Returns:
+            pathlib.Path: The absolute path of the profile.
+        """
         return self.profile_path.resolve()
 
     @property
-    def profile_absolute_full_path(self):
-        """returns the absolute path of profile_path variable"""
+    def profile_absolute_full_path(self) -> pathlib.Path:
+        """Return the absolute path of the profile_path property.
+
+        Returns:
+            pathlib.Path: The absolute path of the profile_path property.
+        """
         return self.profile_absolute_path / self.profile_name
 
-    def render_profile_name(self):
+    def render_profile_name(self) -> str:
+        """Return the rendered profile name.
+
+        Returns:
+            str: The rendered profile name.
+        """
         return self.profile_name_template.format(
             printer_brand=self.printer_brand,
             printer_model=self.printer_model,
@@ -763,23 +955,32 @@ class ICCGenerator(object):
         )
 
     @property
-    def profile_name(self):
-        """getter for the profile_name attribute"""
+    def profile_name(self) -> str:
+        """Return the profile_name attribute value.
+
+        Returns:
+            str: The profile_name attribute value.
+        """
         if not self._profile_name:
             self.profile_name = self.render_profile_name()
         return self._profile_name
 
     @profile_name.setter
-    def profile_name(self, profile_name):
-        """setter for profile_name
-        :param str profile_name:
-        :return:
+    def profile_name(self, profile_name: str):
+        """Set the profile_name attribute value.
+
+        Args:
+            profile_name (str): The profile name.
         """
         self._profile_name = profile_name
 
     @property
-    def per_page_patch_count(self):
-        """getter for the per_page_patch_count property"""
+    def per_page_patch_count(self) -> int:
+        """Return the per_page_patch_count attribute value.
+
+        Returns:
+            int: The per page patch count value.
+        """
         # Per Page Patch Count is Defined by the Paper Size and
         # the High Resolution mode
         resolution_str = (
@@ -790,21 +991,35 @@ class ICCGenerator(object):
         ]
 
     @property
-    def patch_count(self):
-        """getter for the patch_count attribute"""
+    def patch_count(self) -> int:
+        """Return the patch_count attribute.
+
+        Uses the per_page_patch_count and number_of_pages to figure out the total number
+        of patches.
+
+        Returns:
+            int: The calculated patch count.
+        """
         return self.per_page_patch_count * self.number_of_pages
 
     @property
-    def gray_patch_count(self):
-        """getter for the gray_patch_count attribute"""
+    def gray_patch_count(self) -> int:
+        """Return the gray_patch_count attribute value.
+
+        Returns:
+            int: The gray path count.
+        """
         return self._gray_patch_count
 
     @gray_patch_count.setter
-    def gray_patch_count(self, gray_patch_count):
-        """setter for the gray_patch_count property
+    def gray_patch_count(self, gray_patch_count: int):
+        """Set the gray_patch_count attribute.
 
-        :param int gray_patch_count:
-        :return:
+        Args:
+            gray_patch_count (int): The gray path count.
+
+        Raises:
+            TypeError: If the given gray_path_count is not an int.
         """
         if not gray_patch_count or not isinstance(gray_patch_count, int):
             raise TypeError(
@@ -815,11 +1030,18 @@ class ICCGenerator(object):
         self._gray_patch_count = gray_patch_count
 
     @classmethod
-    def run_external_process(cls, command, shell=False):
-        """Runs an external process and yields the output
+    def run_external_process(cls, command: list, shell: bool = False):
+        """Run an external process and yields the output.
 
-        :param command: The command to run
-        :param bool shell: A bool value for executing the command in shell or not.
+        Args:
+            command (list): The command to run.
+            shell (bool): A bool value for executing the command in shell or not.
+
+        Raises:
+            RuntimeError: If the command return code is not 0.
+
+        Yields:
+            str: The command output.
         """
         if not shell:
             process = subprocess.Popen(command, stderr=subprocess.PIPE)
@@ -848,7 +1070,7 @@ class ICCGenerator(object):
             os.system(command)
 
     def generate_target(self):
-        """generates the required ti1 file"""
+        """Generate the required ti1 file."""
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
@@ -876,9 +1098,7 @@ class ICCGenerator(object):
             print(output)
 
     def generate_tif(self):
-        """generates the required Tiff file or files depending on the page
-        count
-        """
+        """Generate the required Tiff file or files depending on the page count."""
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
@@ -910,7 +1130,7 @@ class ICCGenerator(object):
             print(output)
 
     def update_tif_files(self):
-        """updates the tiff file paths"""
+        """Update the tiff file paths."""
         # update tif files
         self.tif_files = []
         if self.number_of_pages == 1:
@@ -926,7 +1146,7 @@ class ICCGenerator(object):
                 )
 
     def print_charts(self):
-        """runs the proper application with the charts already open
+        """Run the proper application with the charts already open.
 
         For Windows, it will first try to run Dry Creek Photo Print Utility if exist and
         if not then it will try to run Adobe Color Printer Utility, and if it doesn't
@@ -962,22 +1182,18 @@ class ICCGenerator(object):
         for output in self.run_external_process(command):
             print(output)
 
-    def read_charts(self, resume=False, read_mode=0):
-        """Reads the printed chart using the device
+    def read_charts(self, resume: bool = False, read_mode: int = 0):
+        """Read the printed chart using the device.
 
-        :param bool resume: If a .ti3 files already exists and ``resume`` is
-          set to True. The process will start from where it left before.
-          Default value is False
-
-        :param int read_mode: There are two possible modes:
-
-            0: Strip Mode
-            1: Patch-By-Patch
-
-          Use ``read_mode=1`` (Patch-By-Patch) with ``resume=True`` to fix
-          erroneously read patches.
-
-        :return:
+        Args:
+            resume (bool): If a .ti3 files already exists and ``resume`` is set to True.
+                The process will start from where it left before. Default value is
+                False.
+            read_mode (int): There are two possible modes:
+                0: Strip Mode
+                1: Patch-By-Patch
+                Use ``read_mode=1`` (Patch-By-Patch) with ``resume=True`` to fix
+                erroneously read patches.
         """
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
@@ -999,7 +1215,7 @@ class ICCGenerator(object):
             print(output)
 
     def generate_profile(self):
-        """generates the profile"""
+        """Generate the profile."""
         os.makedirs(self.profile_absolute_path, exist_ok=True)
 
         # ************************
@@ -1030,7 +1246,7 @@ class ICCGenerator(object):
         for output in self.run_external_process(command):
             print(output)
 
-    def check_profile(self, sort_by_de=False):
+    def check_profile(self, sort_by_de: bool = False):
         """Check the profile quality.
 
         Args:
@@ -1076,6 +1292,9 @@ class ICCGenerator(object):
 
         For MacOS:
             ~/Library/ColorSync/Profiles/
+
+        Raises:
+            RuntimeError: If icc_profile_absolute_full_path doesn't exist.
         """
         # check if the profile is not generated yet
         icc_profile_absolute_full_path = self.profile_absolute_full_path.with_suffix(
@@ -1095,11 +1314,11 @@ class ICCGenerator(object):
     @classmethod
     def color_correct_image(
         cls,
-        printer_profile_path=None,
-        input_image_path=None,
-        output_image_path=None,
-        image_profile="AdobeRGB",
-        intent="r",
+        printer_profile_path: Union[str, pathlib.Path] = None,
+        input_image_path: Union[str, pathlib.Path] = None,
+        output_image_path: Union[str, pathlib.Path, None] = None,
+        image_profile: Union[str, pathlib.Path] = "AdobeRGB",
+        intent: str = "r",
     ):
         """Apply color correction to the given image.
 
@@ -1130,6 +1349,22 @@ class ICCGenerator(object):
 
                 p = perceptual, r = relative colorimetric (default)
                 s = saturation, a = absolute colorimetric
+
+        Raises:
+            ValueError: Raises ValueError in following conditions:
+                - If printer_profile_path doesn't exist.
+                - If printer_profile_path suffix is not ".icc" or ".icm".
+                - If image_profile_path doesn't exist.
+                - If input_image_path doesn't exist.
+                - If input_image_path suffix is not one of ".jpg", ".tif" or ".tiff"
+                - If output_image_path suffix is not one of ".jpg", ".tif" or ".tiff"
+                - If intent is not one of ["p", "r", "s", "a"].
+                - If image_profile filename isn't one of "AdobeRGB" or "sRGB".
+            TypeError: Raises TypeError in following conditions:
+                - If printer_profile_path is not a str or pathlib.Path instance.
+                - If input_path is not a str or pathlib.Path instance.
+                - If intent is not a str.
+                - If image_profile is not a str or pathlib.Path.
         """
         # ---------------------
         # Printer Profile Path
