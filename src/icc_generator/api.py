@@ -1227,12 +1227,12 @@ class ICCGenerator(object):
         """
         command = []
         system_name = platform.system().lower()
-        if "win32" in system_name:  # Windows
+        if "windows" in system_name:  # Windows
             # call Dry Creek Photo Print Utility first
             # if it fails then try to call ACPU
             # if this fails too, raise a RuntimeError
             # TODO: implement and test this on Windows
-            command = ["C:/Program Files/Dry Creek Photo/Print Utility/Print Utility"]
+            command = ["C:\Program Files (x86)\Dry Creek Photo\Profile Target Printer\DCP Profile Target Printer.exe"] + self.tif_files
         elif "linux" in system_name:  # Linux
             # call Gimp with the TIFF Files
             command = ["/usr/bin/gimp"] + self.tif_files
